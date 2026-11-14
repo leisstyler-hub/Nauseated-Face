@@ -162,17 +162,23 @@ button {
   flex: 1;
 }
 .ticker-track,
-.ticker-copy {
+.ticker-copy,
+.ticker-sequence {
   display: flex;
   width: max-content;
   align-items: center;
+  flex-shrink: 0;
 }
 .ticker-track {
   animation: ticker-roll 75s linear infinite;
 }
-.ticker:hover .ticker-track,
-.ticker:focus-within .ticker-track {
+.ticker:has(.ticker-item:focus-visible) .ticker-track {
   animation-play-state: paused;
+}
+@media (hover: hover) {
+  .ticker-window:hover .ticker-track {
+    animation-play-state: paused;
+  }
 }
 .ticker-item {
   display: block;
@@ -627,7 +633,8 @@ button {
   .ticker-window {
     overflow-x: auto;
   }
-  .ticker-copy[aria-hidden="true"] {
+  .ticker-copy[aria-hidden="true"],
+  .ticker-sequence[aria-hidden="true"] {
     display: none;
   }
 }
