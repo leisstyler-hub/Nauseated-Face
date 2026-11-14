@@ -21,9 +21,8 @@ export function LatestActivity({ events }: { events: InspectionEvent[] }) {
       </p>
       {events.length === 0 ? (
         <p className="rounded-xl border border-card-border bg-card p-6 text-sm text-muted">
-          The King County API didn&apos;t return any records just now. Try
-          refreshing — this section always reflects live data, never
-          placeholders.
+          No inspection records are available in this view yet. See the
+          official King County source for inspection information.
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,0 +1,67 @@
+{
+  "environment": "local PGlite PostgreSQL WASM; not Neon or hosted evidence",
+  "revision": "fad297fdeaaf04b21e08af20a57a639a834f838b",
+  "report": {
+    "postgresConnected": true,
+    "postgresVersion": "PostgreSQL 18.6 (PGlite 0.5.16)",
+    "first": {
+      "runId": 1,
+      "rowCount": 18,
+      "changedCount": 18,
+      "scope": {
+        "type": "latest",
+        "limit": 5
+      },
+      "revision": "1794582923"
+    },
+    "repeat": {
+      "runId": 2,
+      "rowCount": 18,
+      "changedCount": 0,
+      "scope": {
+        "type": "latest",
+        "limit": 5
+      },
+      "revision": "1794582923"
+    },
+    "business": {
+      "runId": 3,
+      "rowCount": 20,
+      "changedCount": 18,
+      "scope": {
+        "type": "business",
+        "businessId": "PFE-PR-3126899"
+      },
+      "revision": "1794582923"
+    },
+    "acceptance": {
+      "exactLatestRows": 18,
+      "exactBusinessRows": 20,
+      "unchangedReimport": true,
+      "sourceFailureRecovery": true,
+      "sqlRollbackRecovery": true
+    },
+    "measurements": {
+      "firstImportMs": 47,
+      "repeatImportMs": 18,
+      "totalMs": 3853,
+      "database_bytes": "8216699",
+      "pilot_bytes": "516096",
+      "index_bytes": "196608",
+      "source_rows": 36,
+      "revisions": 36,
+      "changes": 36,
+      "runs": 4
+    },
+    "sourceUrls": [
+      "https://data.kingcounty.gov/api/views/r878-4sxa.json",
+      "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=business_id%2Cinspection_serial_num%2Cmax%28inspection_date%29+AS+latest_date&%24group=business_id%2Cinspection_serial_num&%24order=latest_date+DESC%2Cbusiness_id%2Cinspection_serial_num&%24limit=5",
+      "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3126899%27+AND+inspection_serial_num%3D%27PFE-RT-126433-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+      "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3127154%27+AND+inspection_serial_num%3D%27PFE-RT-140951-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+      "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3127836%27+AND+inspection_serial_num%3D%27PFE-RT-0458171-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+      "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3127911%27+AND+inspection_serial_num%3D%27PFE-RT-0458173-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+      "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3128231%27+AND+inspection_serial_num%3D%27PFE-RT-0458131-2025%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+      "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24order=%3Aid&%24where=business_id%3D%27PFE-PR-3126899%27&%24limit=1000&%24offset=0"
+    ]
+  }
+}

@@ -1,4 +1,6 @@
 import { cache } from "react";
+import { openPostgres } from "../../backend/postgres-store.mjs";
+import { loadSavedFeed } from "../../backend/site-feed.mjs";
 // King County Food Establishment Inspection Data — official public source.
 // https://data.kingcounty.gov/resource/r878-4sxa.json
 const SOURCE_API = "https://data.kingcounty.gov/resource/r878-4sxa.json";
@@ -151,3 +153,14 @@ export async function fetchRecentInspectionEvents(
 export const getRecentInspectionEvents = cache(() =>
   fetchRecentInspectionEvents(100),
 );
+
+export const getInspectionFeed = cache(async () => {
+  if (process.env.NF_PILOT_VERIFIED !== "yes") {
+    return { events: await getRecentInspectionEvents(), saved: false, observedAt: null as string | null, stale: false, importError: false };
+  }
+  const store = openPostgres();
+  try {
+    const feed = await loadSavedFeed(store);
+    return { events: groupIntoEvents(feed.rows as ViolationRow[]), saved: true, observedAt: feed.oldestObservation, stale: feed.stale, importError: Boolean(feed.freshness.error) };
+  } finally { await store.close(); }
+});
