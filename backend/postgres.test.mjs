@@ -3,6 +3,24 @@ import assert from 'node:assert/strict';
 import { assertPreviewPilot, withTransaction, prepareSnapshot } from './postgres-pilot.mjs';
 import { handleRead } from './read.mjs';
 import { pilotAuthorized } from './pilot-auth.mjs';
+import { directPilotUrl } from './postgres-store.mjs';
+import { rollbackProbe } from './pilot-run.mjs';
+
+test('runner rollback failure still discards its client exactly once', async () => {
+  const releases = [];
+  const pool = { connect: async () => ({ query: async sql => { if (sql === 'ROLLBACK') throw new Error('rollback connection lost'); if (sql.includes('deliberately_missing')) throw Object.assign(new Error('probe'), { code: '42883' }); }, release: error => releases.push(error) }) };
+  await assert.rejects(rollbackProbe(pool), /rollback connection lost/);
+  assert.equal(releases.length, 1);
+  assert.equal(releases[0]?.message, 'rollback connection lost');
+});
+
+test('pilot requires an explicit direct Neon TLS endpoint for session locks', () => {
+  const direct = 'postgresql://synthetic:synthetic@ep-synthetic.us-west-2.aws.neon.tech/neondb?sslmode=require';
+  assert.equal(directPilotUrl({ DATABASE_URL_UNPOOLED: direct }), direct);
+  assert.throws(() => directPilotUrl({ DATABASE_URL: direct }), /direct/);
+  assert.throws(() => directPilotUrl({ DATABASE_URL_UNPOOLED: direct.replace('ep-synthetic.', 'ep-synthetic-pooler.') }), /direct/);
+  assert.throws(() => directPilotUrl({ DATABASE_URL_UNPOOLED: direct.replace('sslmode=require', 'sslmode=disable') }), /TLS/);
+});
 
 test('manual pilot authorization fails closed outside verified Preview or without exact bearer', () => {
   const token = 'a'.repeat(64);

@@ -42,5 +42,12 @@ test('Postgres engine: repeat, revision, removal, restoration, coverage and reco
     const report = await runPilot(store, { snapshot: async scope => ({ rows: [row('1')], scope, revision: 'synthetic-2', urls: [] }) });
     assert.equal(report.acceptance.sqlRollbackRecovery, true);
     assert.equal(report.acceptance.unchangedReimport, true);
+    const committed = async () => Promise.all(['source_rows', 'row_revisions', 'row_changes', 'inspections', 'violations'].map(async table => (await db.query(`SELECT to_jsonb(t) AS row FROM nf_preview.${table} t ORDER BY to_jsonb(t)::text`)).rows));
+    const beforeFailure = await committed();
+    await db.exec("CREATE FUNCTION nf_preview.fail_promotion() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic promotion failure'; END $$; CREATE TRIGGER fail_promotion BEFORE INSERT ON nf_preview.violations FOR EACH ROW EXECUTE FUNCTION nf_preview.fail_promotion()");
+    await assert.rejects(importPostgres(store, source([row('1', { violation_points: '99' })]), { type: 'all' }), /synthetic promotion/);
+    assert.deepEqual(await committed(), beforeFailure);
+    assert.equal((await store.status()).error, 'Import failed; last committed snapshot retained');
+    await db.exec('DROP TRIGGER fail_promotion ON nf_preview.violations; DROP FUNCTION nf_preview.fail_promotion()');
   } finally { await db.close(); }
 });

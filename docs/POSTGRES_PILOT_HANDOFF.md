@@ -10,6 +10,13 @@ successful run history promote in a transaction. Failure preserves committed
 records and stores a sanitized error. A failed rollback discards its connection.
 Original source strings, raw rows, hashes, revisions and removals are retained.
 
+The runtime requires `DATABASE_URL_UNPOOLED`, a direct Neon host and TLS; pooled
+hosts are rejected because session advisory locks must stay on one server
+session. Hosted contention/reacquisition checks remain required. Independent
+review findings also led to guaranteed probe cleanup and direct before/after
+comparison of source, revision, change, inspection and violation tables. A local
+engine trigger forces SQL failure after source mutation and verifies recovery.
+
 `POST /api/pilot` requires a verified Preview runtime and an exact bearer token
 of at least 32 characters. GET cannot trigger an import. Vercel SSO protection
 remains enabled. Use branch-scoped Preview variables `NF_PILOT_VERIFIED=yes`

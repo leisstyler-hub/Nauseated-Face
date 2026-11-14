@@ -2,6 +2,29 @@ import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
 import { Source } from './source.mjs';
 import { importPostgres } from './postgres-store.mjs';
+import { withTransaction } from './postgres-pilot.mjs';
+
+export async function rollbackProbe(pool) {
+  let expectedFailure = false;
+  let discard;
+  const probePool = { connect: async () => {
+    const client = await pool.connect();
+    return { query: client.query.bind(client), release(error) { discard = error; client.release(error); } };
+  } };
+  await withTransaction(probePool, async client => {
+    await client.query('UPDATE nf_preview.source_rows SET active=false');
+    try { await client.query('SELECT nf_preview.deliberately_missing_recovery_probe()'); }
+    catch (error) { expectedFailure = error.code === '42883'; throw error; }
+  }).catch(error => { if (discard) throw discard; if (!expectedFailure) throw error; });
+  // A failed rollback is discarded by withTransaction. State equality below is
+  // still required; the missing-function error alone is not recovery evidence.
+  if (!expectedFailure) throw new Error('Rollback probe did not exercise SQL failure');
+}
+
+async function committedState(pool) {
+  return Promise.all(['source_rows', 'row_revisions', 'row_changes', 'inspections', 'violations'].map(async table =>
+    (await pool.query(`SELECT to_jsonb(t) AS row FROM nf_preview.${table} t ORDER BY to_jsonb(t)::text`)).rows));
+}
 
 // Only bounded official scopes; failure tests never modify county records.
 export async function runPilot(store, source = new Source()) {
@@ -47,13 +70,10 @@ export async function runPilot(store, source = new Source()) {
   await assert.rejects(importPostgres(store, { snapshot: async () => { throw new Error('Synthetic source failure'); } }, scope));
   assert.deepEqual(await store.latest(100, 0), before);
   // Force a real SQL transaction failure after an uncommitted row update.
-  const client = await store.pool.connect();
-  try {
-    await client.query('BEGIN');
-    await client.query('UPDATE nf_preview.source_rows SET active=false');
-    try { await client.query('SELECT nf_preview.deliberately_missing_recovery_probe()'); }
-    catch { await client.query('ROLLBACK'); rollbackExercised = true; }
-  } finally { await client.query('ROLLBACK'); client.release(); }
+  const committedBefore = await committedState(store.pool);
+  await rollbackProbe(store.pool);
+  assert.deepEqual(await committedState(store.pool), committedBefore);
+  rollbackExercised = true;
   assert.equal(rollbackExercised, true);
   assert.deepEqual(await store.latest(100, 0), before);
   const storage = (await store.pool.query("SELECT pg_database_size(current_database())::text AS database_bytes, sum(pg_total_relation_size(c.oid))::text AS pilot_bytes, sum(pg_indexes_size(c.oid))::text AS index_bytes FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='nf_preview' AND c.relkind='r'")).rows[0];
