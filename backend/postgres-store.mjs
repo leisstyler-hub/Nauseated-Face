@@ -12,6 +12,9 @@ const query = async (client, sql, params = []) => (await client.query(sql, param
 export function directPilotUrl(env) {
   let url;
   try { url = new URL(env.DATABASE_URL_UNPOOLED); } catch { throw new Error('Pilot requires explicit direct endpoint'); }
+  for (const key of url.searchParams.keys()) {
+    if (!['sslmode', 'channel_binding'].includes(key) || url.searchParams.getAll(key).length !== 1) throw new Error('Unsupported direct endpoint parameters');
+  }
   if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname.endsWith('.neon.tech') || url.hostname.includes('-pooler.')) throw new Error('Pilot requires direct Neon endpoint');
   if (!['require', 'verify-full'].includes(url.searchParams.get('sslmode'))) throw new Error('Pilot requires TLS');
   return env.DATABASE_URL_UNPOOLED;

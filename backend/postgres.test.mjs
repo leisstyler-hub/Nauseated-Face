@@ -20,6 +20,8 @@ test('pilot requires an explicit direct Neon TLS endpoint for session locks', ()
   assert.throws(() => directPilotUrl({ DATABASE_URL: direct }), /direct/);
   assert.throws(() => directPilotUrl({ DATABASE_URL_UNPOOLED: direct.replace('ep-synthetic.', 'ep-synthetic-pooler.') }), /direct/);
   assert.throws(() => directPilotUrl({ DATABASE_URL_UNPOOLED: direct.replace('sslmode=require', 'sslmode=disable') }), /TLS/);
+  assert.throws(() => directPilotUrl({ DATABASE_URL_UNPOOLED: `${direct}&host=ep-synthetic-pooler.us-west-2.aws.neon.tech` }), /parameters/);
+  assert.throws(() => directPilotUrl({ DATABASE_URL_UNPOOLED: `${direct}&sslmode=disable` }), /parameters/);
 });
 
 test('manual pilot authorization fails closed outside verified Preview or without exact bearer', () => {
