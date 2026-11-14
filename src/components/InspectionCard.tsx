@@ -1,3 +1,4 @@
+import { concernPercent } from "@/lib/ranking";
 import { InspectionEvent } from "@/lib/kingcounty";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 
@@ -30,12 +31,19 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
         </span>
       </div>
 
+      <p className="text-nausea font-bold">
+        🤢 {concernPercent(event)}%{" "}
+        <span className="text-xs font-normal text-muted">
+          Nauseated Face Index v1
+        </span>
+      </p>
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
         <span>{formatInspectionDate(event.inspectionDate)}</span>
         <span>{event.inspectionType}</span>
-        {event.score !== null && <span>Score: {event.score}</span>}
+        {event.score !== null && <span>Official score: {event.score}</span>}
         <span>
-          {event.violationCount} violation{event.violationCount === 1 ? "" : "s"}
+          {event.violationCount} violation
+          {event.violationCount === 1 ? "" : "s"}
           {event.redViolationCount > 0 && (
             <span className="text-critical">
               {" "}
@@ -44,7 +52,9 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
           )}
         </span>
         {event.closedBusiness && (
-          <span className="font-semibold text-critical">Closed by inspector</span>
+          <span className="font-semibold text-critical">
+            Closed by inspector
+          </span>
         )}
       </div>
 

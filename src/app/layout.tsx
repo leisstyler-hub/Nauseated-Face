@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://nauseated-face.app";
-const TITLE = "Nauseated Face — Seattle Food-Safety Watchdog";
+const TITLE = "Nauseated Face — Seattle’s Irreverent Food-Safety Watchdog";
 const DESCRIPTION =
   "Official King County food inspection data, turned into readable rankings and stories. Funny, sarcastic, dramatic, and always data-backed.";
 

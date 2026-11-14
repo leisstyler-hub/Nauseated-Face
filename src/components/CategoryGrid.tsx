@@ -1,85 +1,82 @@
-interface Category {
-  emoji: string;
-  title: string;
-  description: string;
-}
-
-const CATEGORIES: Category[] = [
-  {
-    emoji: "🏆",
-    title: "Nauseated Face Hall of Shame",
-    description: "The worst inspection outcomes, ranked transparently.",
-  },
-  {
-    emoji: "🚨",
-    title: "Red Violation Report",
-    description: "Businesses cited for critical (red) violations.",
-  },
-  {
-    emoji: "🔁",
-    title: "Repeat Offender",
-    description: "Same violation, more than once, at the same business.",
-  },
-  {
-    emoji: "🔒",
-    title: "Closed Kitchen Watch",
-    description: "Businesses closed by an inspector pending correction.",
-  },
-  {
-    emoji: "📈",
-    title: "Comeback of the Week",
-    description: "Businesses that passed reinspection after a rough start.",
-  },
-  {
-    emoji: "📋",
-    title: "Most Violations",
-    description: "Highest violation counts in a single inspection.",
-  },
-  {
-    emoji: "🍽️",
-    title: "Clean Plate Award",
-    description: "Excellent, violation-free inspection results.",
-  },
-  {
-    emoji: "📸",
-    title: "Gross-Out Gallery",
-    description: "The most memorable violation descriptions, verbatim.",
-  },
+"use client";
+import { useState } from "react";
+const categories = [
+  [
+    "Hall of Shame",
+    "The highest violation-point totals. A single inspection is not an ongoing trend.",
+  ],
+  [
+    "Red Violation Report",
+    "Critical violations recorded by King County inspectors.",
+  ],
+  [
+    "Repeat Offender",
+    "Repeat violations require verified inspection history. Historical matching is still in development.",
+  ],
+  [
+    "Closed Kitchen Watch",
+    "Closure at the time of inspection does not establish that a business remains closed.",
+  ],
+  [
+    "Most Violations",
+    "A count of recorded violations in one inspection event.",
+  ],
+  [
+    "Highest Inspection Score",
+    "Official inspection scores, separate from our editorial index.",
+  ],
+  [
+    "Gross-Out Gallery",
+    "Official violation descriptions. No invented photos or allegations.",
+  ],
+  [
+    "Comeback of the Week",
+    "A comeback requires a matched reinspection outcome. Historical matching is still in development.",
+  ],
+  [
+    "Clean Plate Award",
+    "Excellent inspection results deserve their moment too.",
+  ],
 ];
-
 export function CategoryGrid() {
+  const [selected, setSelected] = useState(0);
   return (
-    <section id="rankings" className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-          Ranking Categories
-        </h2>
-        <span className="rounded-full border border-warning/40 bg-warning/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-warning">
-          Nauseated Face Index launching soon
-        </span>
+    <section id="rankings" className="categories">
+      <div className="section-heading">
+        <p className="eyebrow text-nausea">PICK YOUR POISON. FIGURATIVELY.</p>
+        <h2>The inspection desk</h2>
       </div>
-      <p className="mb-8 max-w-2xl text-sm text-muted">
-        These categories will be powered by the Nauseated Face Index, a
-        transparent scoring system weighing violation points, red/critical
-        violations, closures, reinspection outcomes, and repeat offenses. The
-        scoring engine is still in development — nothing below is ranked yet.
-      </p>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {CATEGORIES.map((cat) => (
-          <div
-            key={cat.title}
-            className="flex flex-col gap-2 rounded-xl border border-card-border bg-card p-5"
-          >
-            <span className="text-3xl" aria-hidden>
-              {cat.emoji}
-            </span>
-            <h3 className="text-base font-bold leading-snug">{cat.title}</h3>
-            <p className="text-sm text-muted">{cat.description}</p>
-            <span className="mt-auto pt-2 text-xs font-semibold text-muted">
-              Coming soon
-            </span>
-          </div>
-        ))}
+      <div className="category-layout">
+        <nav aria-label="Inspection categories" className="category-nav">
+          {categories.map(([name], i) => (
+            <button
+              key={name}
+              aria-pressed={selected === i}
+              onClick={() => setSelected(i)}
+              className={selected === i ? "active" : ""}
+            >
+              <span>{String(i + 1).padStart(2, "0")}</span>
+              {name}
+              <span aria-hidden>↗</span>
+            </button>
+          ))}
+        </nav>
+        <article className="category-panel" aria-live="polite">
+          <span className="category-face" aria-hidden>
+            🤢
+          </span>
+          <p className="eyebrow text-nausea">THE NAUSEATED FACE FILES</p>
+          <h3>{categories[selected][0]}</h3>
+          <p>{categories[selected][1]}</p>
+          <p className="scope">
+            Dedicated category rankings are in development. Browse complete
+            recent inspection records above while we build the history-backed
+            rankings.
+          </p>
+          <a className="secondary-button" href="#latest">
+            Browse recent inspections ↗
+          </a>
+        </article>
       </div>
     </section>
   );

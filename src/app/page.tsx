@@ -1,5 +1,7 @@
-import { Suspense } from "react";
 import { Hero } from "@/components/Hero";
+import { TickerSection } from "@/components/TickerSection";
+import { Suspense } from "react";
+import { Intro } from "@/components/Intro";
 import { InspectionFeedSection } from "@/components/InspectionFeedSection";
 import { FeedSkeleton } from "@/components/FeedSkeleton";
 import { CategoryGrid } from "@/components/CategoryGrid";
@@ -9,6 +11,16 @@ import { AdSlot } from "@/components/AdSlot";
 export default function Home() {
   return (
     <>
+      <Intro />
+      <Suspense
+        fallback={
+          <div className="ticker px-4 py-3 text-xs text-muted">
+            Loading latest available King County records…
+          </div>
+        }
+      >
+        <TickerSection />
+      </Suspense>
       <Hero />
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
         <AdSlot kind="top-leaderboard" />

@@ -1,3 +1,4 @@
+import { cache } from "react";
 // King County Food Establishment Inspection Data — official public source.
 // https://data.kingcounty.gov/resource/r878-4sxa.json
 const SOURCE_API = "https://data.kingcounty.gov/resource/r878-4sxa.json";
@@ -50,16 +51,17 @@ export interface InspectionEvent {
 function groupIntoEvents(rows: ViolationRow[]): InspectionEvent[] {
   const bySerial = new Map<string, ViolationRow[]>();
   for (const row of rows) {
-    const key = row.inspection_serial_num;
-    if (!key) continue;
+    const key = `${row.business_id}|${row.inspection_serial_num}|${row.inspection_date}`;
+    if (!row.inspection_serial_num || !row.business_id) continue;
     const existing = bySerial.get(key);
     if (existing) existing.push(row);
     else bySerial.set(key, [row]);
   }
 
   const events: InspectionEvent[] = [];
-  for (const [serialNum, group] of bySerial) {
+  for (const [, group] of bySerial) {
     const first = group[0];
+    const serialNum = first.inspection_serial_num;
     const violations = group
       .filter((r) => r.violation_description)
       .map((r) => ({
@@ -79,7 +81,9 @@ function groupIntoEvents(rows: ViolationRow[]): InspectionEvent[] {
       inspectionType: first.inspection_type,
       score: first.inspection_score ? Number(first.inspection_score) : null,
       result: first.inspection_result ?? null,
-      closedBusiness: first.inspection_closed_business === "Yes",
+      closedBusiness:
+        first.inspection_closed_business?.toLowerCase() === "true" ||
+        first.inspection_closed_business?.toLowerCase() === "yes",
       grade: first.grade,
       violations,
       totalViolationPoints: violations.reduce((sum, v) => sum + v.points, 0),
@@ -91,20 +95,59 @@ function groupIntoEvents(rows: ViolationRow[]): InspectionEvent[] {
 
   return events.sort(
     (a, b) =>
-      new Date(b.inspectionDate).getTime() - new Date(a.inspectionDate).getTime(),
+      new Date(b.inspectionDate).getTime() -
+      new Date(a.inspectionDate).getTime(),
   );
 }
 
 export async function fetchRecentInspectionEvents(
-  rowLimit = 500,
+  eventLimit = 100,
 ): Promise<InspectionEvent[]> {
-  const url = `${SOURCE_API}?$limit=${rowLimit}&$order=inspection_date DESC`;
-  const res = await fetch(url, {
-    next: { revalidate: 900 },
+  const read = async (
+    params: Record<string, string>,
+  ): Promise<ViolationRow[]> => {
+    const res = await fetch(`${SOURCE_API}?${new URLSearchParams(params)}`, {
+      next: { revalidate: 900 },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok)
+      throw new Error(`King County API request failed: ${res.status}`);
+    const rows = await res.json();
+    if (!Array.isArray(rows)) throw new Error("Invalid King County response");
+    return rows;
+  };
+  // Select event keys first, then fetch every violation row for those keys.
+  // A raw row limit would silently split the final inspection.
+  const keys = await read({
+    $select: "business_id,inspection_serial_num,inspection_date",
+    $group: "business_id,inspection_serial_num,inspection_date",
+    $order: "inspection_date DESC,business_id,inspection_serial_num",
+    $limit: String(Math.min(100, Math.max(1, eventLimit))),
   });
-  if (!res.ok) {
-    throw new Error(`King County API request failed: ${res.status}`);
+  if (!keys.length) return [];
+  const literal = (v: string) => `'${v.replaceAll("'", "''")}'`;
+  const rows: ViolationRow[] = [];
+  // Batches keep query URLs small. Fail visibly rather than show a partial group.
+  for (let i = 0; i < keys.length; i += 15) {
+    const where = keys
+      .slice(i, i + 15)
+      .map(
+        (k) =>
+          `(business_id=${literal(k.business_id)} AND inspection_serial_num=${literal(k.inspection_serial_num)} AND inspection_date=${literal(k.inspection_date)})`,
+      )
+      .join(" OR ");
+    const batch = await read({
+      $where: where,
+      $limit: "5000",
+      $order: "inspection_date DESC,business_id,inspection_serial_num",
+    });
+    if (batch.length >= 5000)
+      throw new Error("Inspection batch exceeded safe row limit");
+    rows.push(...batch);
   }
-  const rows: ViolationRow[] = await res.json();
   return groupIntoEvents(rows);
 }
+
+export const getRecentInspectionEvents = cache(() =>
+  fetchRecentInspectionEvents(100),
+);

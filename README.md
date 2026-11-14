@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+## Landing page redesign
+
+- The initial 1.5-second face intro plays on a new document or reload, not client navigation or back/forward; reduced motion bypasses it. No storage or tracking is needed.
+- Ticker: latest 12 fetched inspection events, not a live stream. Hover/focus pauses it. With reduced motion, scroll the static strip. Records of 50+ violation points receive a drop animation.
+- Data: selects the latest 100 complete inspection keys and retrieves their full rows in bounded batches. Cached up to 15 minutes. API errors fail visibly.
+- Index v1: total violation points capped to 0-100; higher means more points. This is not a government score or probability of illness. History weighting remains pending backend integration.
+- Weekly feature: highest points among eligible past-seven-day inspections in the 100-event sample; 20+ points, an unsatisfactory result, or recorded closure required. Not countywide.
+- Category buttons select an accessible descriptive panel. Dedicated rankings remain in development.
+- Verify: `npm run lint`, `npm run build`, `node --experimental-strip-types --test tests/*.test.mjs`.

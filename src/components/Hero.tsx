@@ -1,35 +1,49 @@
 export function Hero() {
   return (
-    <section className="border-b border-card-border bg-gradient-to-b from-nausea-soft to-background">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-16 text-center sm:px-6 sm:py-24">
-        <span className="text-6xl sm:text-8xl" aria-hidden>
-          🤢
-        </span>
-        <h1 className="max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          Seattle&apos;s Food-Safety Watchdog,{" "}
-          <span className="text-nausea">With a Sense of Humor</span>
-        </h1>
-        <p className="max-w-2xl text-balance text-base text-muted sm:text-lg">
-          Nauseated Face turns official King County food inspection records
-          into readable rankings and stories — funny, sarcastic, dramatic,
-          and always data-backed. Never a knowing falsehood.
+    <section className="hero">
+      <div className="hero-copy">
+        <p className="eyebrow">
+          Seattle&apos;s Irreverent Food-Safety Watchdog.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <a
-            href="#latest"
-            className="rounded-full bg-nausea px-6 py-3 text-sm font-bold text-background transition-opacity hover:opacity-90"
-          >
-            See Latest Inspections
+        <h1>
+          Someone&apos;s Gotta
+          <br />
+          Clean This{" "}
+          <span className="text-nausea">
+            Cr
+            <span
+              className="inline-face"
+              role="img"
+              aria-label="nauseated face"
+            >
+              🤢
+            </span>
+            p Up.
+          </span>
+        </h1>
+        <p className="hero-description">
+          🤢 Nauseated Face turns official King County food inspection records
+          into readable rankings and stories — with a healthy dose of sarcasm, a
+          little drama, and facts that always come first.
+        </p>
+        <div className="hero-actions">
+          <a href="#worst" className="primary-button">
+            Meet this week&apos;s worst <span aria-hidden>↗</span>
           </a>
-          <a
-            href="/methodology"
-            className="rounded-full border border-card-border px-6 py-3 text-sm font-bold text-foreground transition-colors hover:border-nausea"
-          >
-            How Scoring Works
+          <a href="/methodology" className="secondary-button">
+            The facts behind the face
           </a>
         </div>
-        <p className="pt-4 text-xs text-muted">
-          Independent publication, not affiliated with King County.
+        <p className="text-xs text-muted">
+          Independent. Not affiliated with King County Public Health.
+        </p>
+      </div>
+      <div className="hero-mascot" aria-hidden="true">
+        <span>🤢</span>
+        <p>
+          PUBLIC RECORDS.
+          <br />
+          PRIVATE GAG REFLEX.
         </p>
       </div>
     </section>

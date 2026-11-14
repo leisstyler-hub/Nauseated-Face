@@ -1,25 +1,129 @@
-import { InspectionEvent } from "@/lib/kingcounty";
-import { InspectionCard } from "./InspectionCard";
-
-export function WeeklyHighlight({ event }: { event: InspectionEvent | null }) {
-  if (!event) return null;
-
+import type { InspectionEvent } from "@/lib/kingcounty";
+import { formatInspectionDate, titleCase } from "@/lib/format";
+import { concernPercent } from "@/lib/ranking";
+export function WeeklyHighlight({
+  event,
+  scope,
+}: {
+  event: InspectionEvent | null;
+  scope: string;
+}) {
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-14 sm:px-6">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-2xl" aria-hidden>
-          🤢
-        </span>
-        <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-          The Weekly 🤢
-        </h2>
+    <section id="worst" className="weekly">
+      <div className="section-heading">
+        <p className="eyebrow text-nausea">
+          THE HEADLINE WE WISH WE DIDN&apos;T HAVE
+        </p>
+        <h2>🤢 This Week&apos;s Worst</h2>
+        <p className="text-muted">
+          The inspections that made us lose our appetite.
+        </p>
       </div>
-      <p className="mb-6 max-w-2xl text-sm text-muted">
-        The most notable recent inspection in the current King County data —
-        chosen by total violation points among recent records, not editorial
-        opinion.
+      <p className="credibility">
+        Featured based on the highest violation-point total among recent King
+        County inspections. Rankings are driven by public records, not personal
+        opinions.
       </p>
-      <InspectionCard event={event} />
+      <p className="scope">{scope}</p>
+      {!event ? (
+        <p className="empty-state">
+          No qualifying inspection in this sample. One minor violation does not
+          earn this spot.
+        </p>
+      ) : (
+        <article className="featured-card">
+          <div className="featured-top">
+            <span className="worst-badge">🤢 THIS WEEK&apos;S WORST</span>
+            <time>{formatInspectionDate(event.inspectionDate)}</time>
+          </div>
+          <div className="featured-title">
+            <div>
+              <h3>{titleCase(event.name)}</h3>
+              <p className="text-muted">
+                {titleCase(event.address)}, {titleCase(event.city)}
+              </p>
+            </div>
+            <div className="face-rating">
+              <span aria-hidden>🤢</span>
+              <strong>{concernPercent(event)}%</strong>
+              <small>Nauseated Face Index v1</small>
+            </div>
+          </div>
+          <div className="score-grid">
+            <div>
+              <strong className="text-critical">
+                {event.totalViolationPoints}
+              </strong>
+              <span>Violation points</span>
+            </div>
+            <div>
+              <strong>{event.violationCount}</strong>
+              <span>Violations</span>
+            </div>
+            <div>
+              <strong className="text-critical">
+                {event.redViolationCount}
+              </strong>
+              <span>Red violations</span>
+            </div>
+          </div>
+          <div className="result-row">
+            <div>
+              <strong>Inspection result</strong>
+              <p>{event.inspectionType}</p>
+            </div>
+            <span
+              className={
+                event.result?.toLowerCase() === "unsatisfactory"
+                  ? "result-badge serious"
+                  : "result-badge"
+              }
+            >
+              {event.result ?? "Not recorded"}
+            </span>
+          </div>
+          <p className="scope">
+            Closure recorded at inspection:{" "}
+            {event.closedBusiness ? "Yes" : "No"}. This is historical inspection
+            data.
+          </p>
+          <div className="flagged">
+            <h4>What inspectors flagged</h4>
+            <ul>
+              {event.violations.slice(0, 3).map((v, i) => (
+                <li key={i}>
+                  <span
+                    className={
+                      v.type === "RED" ? "text-critical" : "text-warning"
+                    }
+                  >
+                    {v.type ?? "Unclassified"} · {v.points} pts
+                  </span>
+                  <p>{v.description}</p>
+                </li>
+              ))}
+            </ul>
+            {event.violationCount > 3 && (
+              <p className="text-sm text-nausea">
+                + {event.violationCount - 3} additional recorded violations
+              </p>
+            )}
+          </div>
+          <a
+            className="inspection-button"
+            href={event.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Explore the official inspection <span aria-hidden>↗</span>
+          </a>
+          <p className="scope">
+            An inspection record, not a current determination of safety. Index =
+            violation points capped at 100; not a probability of illness.{" "}
+            <a href="/methodology">How it works</a>.
+          </p>
+        </article>
+      )}
     </section>
   );
 }
