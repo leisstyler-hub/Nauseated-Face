@@ -215,6 +215,7 @@ button {
 .intro {
   position: fixed;
   inset: 0;
+  overflow: hidden;
   z-index: 100;
   display: grid;
   place-items: center;
