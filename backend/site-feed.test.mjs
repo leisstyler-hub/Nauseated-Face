@@ -30,3 +30,21 @@ test('main feed shows newest saved event per business without removing history',
   assert.deepEqual(feed.rows.map(r => r[':id']), ['other', 'new']);
   assert.equal(items.length, 3);
 });
+
+test('saved feed batches selected events without loading detail history', async () => {
+  let batches = 0;
+  const store = {
+    status: async () => ({ stale: false }),
+    latest: async () => [{ id: 'event', businessId: 'B1', inspectionDate: '2026-11-14', rowCount: 2 }],
+    feedRows: async ids => { batches++; assert.deepEqual(ids, ['event']); return [
+      { event_id: 'event', raw_json: '{"violation_points":"05"}', observed_at: '2026-11-14' },
+      { event_id: 'event', raw_json: '{"violation_points":"10"}', observed_at: '2026-11-14' },
+    ]; },
+    detail: async () => { throw Error('Full history must not be loaded'); },
+  };
+  const feed = await loadSavedFeed(store);
+  assert.equal(feed.rows.length, 2);
+  assert.equal(feed.rows[0].violation_points, '05');
+  assert.equal(batches, 1);
+  await assert.rejects(loadSavedFeed({ ...store, feedRows: async () => [] }), /incomplete/);
+});

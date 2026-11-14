@@ -22,6 +22,9 @@ test('Postgres engine: repeat, revision, removal, restoration, coverage and reco
     const [item] = await store.latest(10, 0);
     assert.equal(item.rowCount, 2);
     assert.equal(item.fields.inspection_score, '05.00');
+    const feedRows = await store.feedRows([item.id]);
+    assert.equal(feedRows.length, 2);
+    assert.equal(JSON.parse(feedRows[0].raw_json).violation_points, '05');
     assert.equal((await store.history('SYNTHETIC-B', 10, 0)).complete, true);
     assert.equal((await store.history('OTHER', 10, 0)).complete, false);
     await importPostgres(store, source([row('1', { violation_points: '10' })], scope), scope);

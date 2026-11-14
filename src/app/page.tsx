@@ -7,6 +7,7 @@ import { FeedSkeleton } from "@/components/FeedSkeleton";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { NewsletterTeaser } from "@/components/NewsletterTeaser";
 import { AdSlot } from "@/components/AdSlot";
+import { RecordLoader } from "@/components/RecordLoader";
 
 export default function Home() {
   return (
@@ -15,7 +16,7 @@ export default function Home() {
       <Suspense
         fallback={
           <div className="ticker px-4 py-3 text-xs text-muted">
-            Loading latest available King County records…
+            <RecordLoader compact />
           </div>
         }
       >

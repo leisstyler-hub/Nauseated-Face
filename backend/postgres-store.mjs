@@ -52,6 +52,10 @@ export class PostgresStore {
     const rows = await query(this.pool, `SELECT i.*, f.finished_at AS observed_at FROM nf_preview.inspections i JOIN nf_preview.refresh_runs f ON f.id=i.last_run ${businessId === undefined ? '' : 'WHERE business_id=$3'} ORDER BY inspection_date DESC,i.id LIMIT $1 OFFSET $2`, businessId === undefined ? [limit, offset] : [limit, offset, businessId]);
     return rows.map(r => ({ id: r.id, businessId: r.business_id, serial: r.serial, inspectionDate: r.inspection_date, fields: JSON.parse(r.fields_json), rowCount: Number(r.row_count), observedAt: r.observed_at, stale: stale(r.observed_at), sourceUrl: sourceUrl(r.business_id, r.serial) }));
   }
+  async feedRows(ids) {
+    if (!ids.length) return [];
+    return query(this.pool, 'SELECT s.event_id,s.raw_json,f.finished_at AS observed_at FROM nf_preview.source_rows s JOIN nf_preview.inspections i ON i.id=s.event_id JOIN nf_preview.refresh_runs f ON f.id=i.last_run WHERE s.active AND s.event_id=ANY($1::text[]) ORDER BY s.event_id,s.source_id', [ids]);
+  }
   async detail(id) {
     // A single repeatable-read transaction prevents a promotion splitting this response.
     return withTransaction(this.pool, async client => {
