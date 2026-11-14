@@ -74,13 +74,14 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
   const started = now();
   const client = await store.pool.connect();
   let locked = false;
+  let discard;
   try {
     const [lock] = await query(client, 'SELECT pg_try_advisory_lock(78623491) AS locked');
     if (!lock.locked) throw new Error('Another preview importer is active');
     locked = true;
     const snapshot = prepareSnapshot(await source.snapshot(scope));
     if (JSON.stringify(snapshot.scope) !== JSON.stringify(scope)) throw new Error('Source scope does not match requested scope');
-    return await withTransaction({ connect: async () => ({ query: client.query.bind(client), release() {} }) }, async tx => {
+    return await withTransaction({ connect: async () => ({ query: client.query.bind(client), release(error) { discard = error; } }) }, async tx => {
       const [run] = await query(tx, "INSERT INTO nf_preview.refresh_runs(started_at,status,scope) VALUES($1,'running',$2) RETURNING id", [started, JSON.stringify(scope)]);
       const all = await query(tx, 'SELECT * FROM nf_preview.source_rows');
       const oldRows = new Map(all.map(r => [r.source_id, r]));
@@ -122,7 +123,8 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
     if (locked) await client.query("INSERT INTO nf_preview.refresh_runs(started_at,finished_at,status,scope,error) VALUES($1,$2,'error',$3,$4)", [started, now(), JSON.stringify(scope), 'Import failed; last committed snapshot retained']);
     throw error;
   } finally {
-    try { if (locked) await client.query('SELECT pg_advisory_unlock(78623491)'); }
-    finally { client.release(); }
+    try { if (locked && !discard) await client.query('SELECT pg_advisory_unlock(78623491)'); }
+    catch (error) { discard = error; }
+    finally { client.release(discard); }
   }
 }

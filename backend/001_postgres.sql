@@ -1,4 +1,4 @@
--- Preview-only candidate. Not yet executed against PostgreSQL.
+-- Preview-only pilot. Local PostgreSQL WASM execution verified; Neon pending.
 -- Dedicated schema prevents collisions with unrelated application tables.
 CREATE SCHEMA IF NOT EXISTS nf_preview;
 CREATE TABLE IF NOT EXISTS nf_preview.schema_migrations(version INTEGER PRIMARY KEY);

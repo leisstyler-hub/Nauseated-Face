@@ -42,6 +42,13 @@ test('commit failure attempts rollback and still releases', async () => {
   assert.deepEqual(calls, ['BEGIN', 'COMMIT', 'ROLLBACK', 'release']);
 });
 
+test('failed rollback discards the damaged pooled connection', async () => {
+  let discarded;
+  const client = { query: async sql => { if (sql === 'ROLLBACK') throw new Error('connection lost'); }, release: error => { discarded = error; } };
+  await assert.rejects(withTransaction({ connect: async () => client }, async () => { throw new Error('promotion failed'); }), /promotion failed/);
+  assert.equal(discarded?.message, 'connection lost');
+});
+
 const row = (id, overrides = {}) => ({ ':id': id, business_id: 'SYNTHETIC-B', inspection_serial_num: 'SYNTHETIC-I', inspection_date: '2026-01-01', inspection_score: '05.00', violation_points: '05', ...overrides });
 const snap = rows => ({ rows, scope: { type: 'all' }, revision: 'synthetic', urls: [] });
 

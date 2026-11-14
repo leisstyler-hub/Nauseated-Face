@@ -13,6 +13,7 @@ export function assertPreviewPilot(env = process.env) {
 export async function withTransaction(pool, action) {
   const client = await pool.connect();
   let begun = false;
+  let discard;
   try {
     await client.query('BEGIN');
     begun = true;
@@ -22,11 +23,11 @@ export async function withTransaction(pool, action) {
   } catch (error) {
     if (begun) {
       try { await client.query('ROLLBACK'); }
-      catch { /* Preserve original failure, including ambiguous COMMIT failures. */ }
+      catch (rollbackError) { discard = rollbackError; }
     }
     throw error;
   } finally {
-    client.release();
+    client.release(discard);
   }
 }
 
