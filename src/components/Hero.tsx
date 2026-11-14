@@ -22,7 +22,7 @@ export function Hero() {
           </span>
         </h1>
         <p className="hero-description">
-          🤢 Nauseated Face turns official King County food inspection records
+          Nauseated Face turns official King County food inspection records
           into readable rankings and stories — with a healthy dose of sarcasm, a
           little drama, and facts that always come first.
         </p>
