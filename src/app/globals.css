@@ -639,3 +639,10 @@ button {
   cursor: pointer;
   border-left: 1px solid #3a4832;
 }
+.face-art {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  object-fit: contain;
+}

@@ -1,3 +1,4 @@
+import { Face } from "@/components/Face";
 import { concernPercent } from "@/lib/ranking";
 import Link from "next/link";
 import { inspectionPath } from "../../backend/inspection-detail.mjs";
@@ -34,7 +35,7 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
       </div>
 
       <p className="text-nausea font-bold">
-        🤢 {concernPercent(event)}%{" "}
+        <Face /> {concernPercent(event)}%{" "}
         <span className="text-xs font-normal text-muted">
           Nauseated Face Index v1
         </span>

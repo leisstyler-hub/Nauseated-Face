@@ -1,3 +1,4 @@
+import { Face } from "@/components/Face";
 import type { InspectionEvent } from "@/lib/kingcounty";
 import Link from "next/link";
 import { inspectionPath } from "../../backend/inspection-detail.mjs";
@@ -35,7 +36,7 @@ export function WeeklyHighlight({
       ) : (
         <article className="featured-card">
           <div className="featured-top">
-            <span className="worst-badge">🤢 THIS WEEK&apos;S WORST</span>
+            <span className="worst-badge"><Face /> THIS WEEK&apos;S WORST</span>
             <time>{formatInspectionDate(event.inspectionDate)}</time>
           </div>
           <div className="featured-title">
@@ -46,7 +47,7 @@ export function WeeklyHighlight({
               </p>
             </div>
             <div className="face-rating">
-              <span aria-hidden>🤢</span>
+              <span aria-hidden><Face /></span>
               <strong>{concernPercent(event)}%</strong>
               <small>Nauseated Face Index v1</small>
             </div>

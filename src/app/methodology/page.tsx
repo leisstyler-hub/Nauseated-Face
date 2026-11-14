@@ -1,3 +1,4 @@
+import { Face } from "@/components/Face";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 import { SOURCE_DATASET_URL } from "@/lib/kingcounty";
@@ -40,7 +41,7 @@ export default function MethodologyPage() {
         provides.
       </p>
 
-      <h2>Nauseated Face Index v1: 0–100% 🤢</h2>
+      <h2>Nauseated Face Index v1: 0–100% <Face /></h2>
       <p>
         The current point-based index equals the total recorded violation
         points, rounded and capped between 0 and 100. Higher means more

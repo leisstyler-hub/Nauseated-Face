@@ -1,4 +1,6 @@
 "use client";
+import { Face } from "@/components/Face";
+
 import { useState } from "react";
 const categories = [
   [
@@ -63,7 +65,7 @@ export function CategoryGrid() {
         </nav>
         <article className="category-panel" aria-live="polite">
           <span className="category-face" aria-hidden>
-            🤢
+            <Face />
           </span>
           <p className="eyebrow text-nausea">THE NAUSEATED FACE FILES</p>
           <h3>{categories[selected][0]}</h3>

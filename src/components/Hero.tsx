@@ -1,3 +1,4 @@
+import { Face } from "@/components/Face";
 export function Hero() {
   return (
     <section className="hero">
@@ -16,7 +17,7 @@ export function Hero() {
               role="img"
               aria-label="nauseated face"
             >
-              🤢
+              <Face />
             </span>
             p Up.
           </span>
@@ -39,7 +40,7 @@ export function Hero() {
         </p>
       </div>
       <div className="hero-mascot" aria-hidden="true">
-        <span>🤢</span>
+        <span><Face /></span>
         <p>
           PUBLIC RECORDS.
           <br />

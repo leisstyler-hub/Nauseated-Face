@@ -1,4 +1,6 @@
 "use client";
+import { Face } from "@/components/Face";
+
 import { useEffect, useState } from "react";
 let startedAt: number | undefined;
 export function Intro() {
@@ -24,7 +26,7 @@ export function Intro() {
   }, []);
   return show ? (
     <div className="intro" aria-hidden="true">
-      <span>🤢</span>
+      <span><Face /></span>
     </div>
   ) : null;
 }

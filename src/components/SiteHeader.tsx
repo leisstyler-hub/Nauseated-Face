@@ -1,3 +1,4 @@
+import { Face } from "@/components/Face";
 import Link from "next/link";
 
 const NAV_LINKS = [
@@ -13,7 +14,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl sm:text-3xl" aria-hidden>
-            🤢
+            <Face />
           </span>
           <span className="text-base font-extrabold tracking-tight sm:text-lg">
             Nauseated Face

@@ -1,4 +1,6 @@
 "use client";
+import { Face } from "@/components/Face";
+
 import { useState } from "react";
 import type { InspectionEvent } from "@/lib/kingcounty";
 import { titleCase } from "@/lib/format";
@@ -30,7 +32,7 @@ export function InspectionTicker({ events }: { events: InspectionEvent[] }) {
                   }
                 >
                   {event.totalViolationPoints >= 50 && (
-                    <span aria-hidden>🤢 </span>
+                    <span aria-hidden><Face /> </span>
                   )}
                   {titleCase(event.name)}{" "}
                   <strong>{event.totalViolationPoints} pts</strong>
