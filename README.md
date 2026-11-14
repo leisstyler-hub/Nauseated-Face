@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+The independent King County backend, local import commands, read API contract, official-record evidence, and hosting limitations are documented in [Backend integration](docs/BACKEND_INTEGRATION.md). Requires Node 24.18+ for local SQLite. No hosted storage or scheduler is included.
+
 ## Getting Started
 
 First, run the development server:

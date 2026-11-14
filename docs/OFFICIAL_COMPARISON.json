@@ -1,0 +1,81 @@
+﻿{
+  "checkedAt": "2026-11-14T04:39:07.940Z",
+  "base": "http://localhost:3101",
+  "checks": [
+    {
+      "id": "31e210282d23e01d1cb8855076d5f3a21a19d160d84f245eadcb283c78a21e63",
+      "businessId": "PFE-PR-3127836",
+      "serial": "PFE-RT-0458171-2026",
+      "officialRowCount": 1,
+      "storedRowCount": 1,
+      "exactRawMatch": true,
+      "sourceUrl": "https://data.kingcounty.gov/resource/r878-4sxa.json?business_id=PFE-PR-3127836&inspection_serial_num=PFE-RT-0458171-2026&%24select=*%2C+%3Aid&%24order=%3Aid&%24limit=50000"
+    },
+    {
+      "id": "5972dc7c62f77584d9628ed5229a11da5c284c1dce7d4081c97bfd25890ce0cd",
+      "businessId": "PFE-PR-3127911",
+      "serial": "PFE-RT-0458173-2026",
+      "officialRowCount": 4,
+      "storedRowCount": 4,
+      "exactRawMatch": true,
+      "sourceUrl": "https://data.kingcounty.gov/resource/r878-4sxa.json?business_id=PFE-PR-3127911&inspection_serial_num=PFE-RT-0458173-2026&%24select=*%2C+%3Aid&%24order=%3Aid&%24limit=50000"
+    },
+    {
+      "id": "a0c6c7702b1618f750a8f65970729a44fa497b086c35ca050470ee23dad5fa18",
+      "businessId": "PFE-PR-3128231",
+      "serial": "PFE-RT-0458131-2025",
+      "officialRowCount": 7,
+      "storedRowCount": 7,
+      "exactRawMatch": true,
+      "sourceUrl": "https://data.kingcounty.gov/resource/r878-4sxa.json?business_id=PFE-PR-3128231&inspection_serial_num=PFE-RT-0458131-2025&%24select=*%2C+%3Aid&%24order=%3Aid&%24limit=50000"
+    },
+    {
+      "id": "beafb8d2ce8b3102e998bae0452114286bb5622e03d426a2f7ec8e3635dfe4e7",
+      "businessId": "PFE-PR-3127154",
+      "serial": "PFE-RT-140951-2026",
+      "officialRowCount": 4,
+      "storedRowCount": 4,
+      "exactRawMatch": true,
+      "sourceUrl": "https://data.kingcounty.gov/resource/r878-4sxa.json?business_id=PFE-PR-3127154&inspection_serial_num=PFE-RT-140951-2026&%24select=*%2C+%3Aid&%24order=%3Aid&%24limit=50000"
+    },
+    {
+      "id": "e34f386eeca7868b8db30ab55cd12691cf17a03d4d5413bc1493747d09432e92",
+      "businessId": "PFE-PR-3126899",
+      "serial": "PFE-RT-126433-2026",
+      "officialRowCount": 2,
+      "storedRowCount": 2,
+      "exactRawMatch": true,
+      "sourceUrl": "https://data.kingcounty.gov/resource/r878-4sxa.json?business_id=PFE-PR-3126899&inspection_serial_num=PFE-RT-126433-2026&%24select=*%2C+%3Aid&%24order=%3Aid&%24limit=50000"
+    }
+  ],
+  "businessHistory": {
+    "businessId": "PFE-PR-3147569",
+    "inspections": 10,
+    "sourceRows": 15,
+    "exactRawMatch": true,
+    "pageSize": 2
+  },
+  "lastSuccess": "2026-11-14T04:31:23.298Z",
+  "sourceRevision": "1794582923",
+  "fullImportRun": false,
+  "recentRuns": [
+    {
+      "id": 3,
+      "status": "success",
+      "rows": 15,
+      "changed": 15
+    },
+    {
+      "id": 2,
+      "status": "success",
+      "rows": 18,
+      "changed": 0
+    },
+    {
+      "id": 1,
+      "status": "success",
+      "rows": 18,
+      "changed": 18
+    }
+  ]
+}
