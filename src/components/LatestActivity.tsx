@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import Link from "next/link";
 import { InspectionEvent } from "@/lib/kingcounty";
 import { InspectionCard } from "./InspectionCard";
 import { AdSlot } from "./AdSlot";
@@ -39,6 +40,7 @@ export function LatestActivity({ events, saved = true }: { events: InspectionEve
           ))}
         </div>
       )}
+      <Link href="/inspections" className="mt-8 inline-flex rounded-full bg-nausea px-6 py-3 text-sm font-bold text-background">View all recent inspections <span className="ml-2" aria-hidden>→</span></Link>
     </section>
   );
 }

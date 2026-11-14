@@ -1,4 +1,6 @@
 import type { InspectionEvent } from "@/lib/kingcounty";
+import Link from "next/link";
+import { inspectionPath } from "../../backend/inspection-detail.mjs";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 import { concernPercent } from "@/lib/ranking";
 export function WeeklyHighlight({
@@ -109,14 +111,12 @@ export function WeeklyHighlight({
               </p>
             )}
           </div>
-          <a
+          <Link
             className="inspection-button"
-            href={event.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={inspectionPath(event)}
           >
-            Explore the official inspection <span aria-hidden>↗</span>
-          </a>
+            Explore the full inspection <span aria-hidden>→</span>
+          </Link>
           <p className="scope">
             An inspection record, not a current determination of safety. Index =
             violation points capped at 100; not a probability of illness.{" "}

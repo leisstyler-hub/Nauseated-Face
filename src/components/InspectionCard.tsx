@@ -1,4 +1,6 @@
 import { concernPercent } from "@/lib/ranking";
+import Link from "next/link";
+import { inspectionPath } from "../../backend/inspection-detail.mjs";
 import { InspectionEvent } from "@/lib/kingcounty";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 
@@ -73,21 +75,19 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
           ))}
           {event.violations.length > 3 && (
             <li className="pl-4 text-xs text-muted">
-              +{event.violations.length - 3} more violation
-              {event.violations.length - 3 === 1 ? "" : "s"}
+              <Link href={inspectionPath(event)} className="text-nausea underline underline-offset-2">+{event.violations.length - 3} more violation
+              {event.violations.length - 3 === 1 ? "" : "s"}</Link>
             </li>
           )}
         </ul>
       )}
 
-      <a
-        href={event.sourceUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={inspectionPath(event)}
         className="mt-1 text-xs font-semibold text-nausea underline underline-offset-2"
       >
-        View official King County record
-      </a>
+        View full inspection
+      </Link>
     </article>
   );
 }

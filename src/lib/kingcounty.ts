@@ -1,4 +1,6 @@
 import { cache } from "react";
+import { createHash } from "node:crypto";
+import { readOfficialInspection } from "../../backend/inspection-detail.mjs";
 import { openPostgres } from "../../backend/postgres-store.mjs";
 import { loadSavedFeed } from "../../backend/site-feed.mjs";
 // King County Food Establishment Inspection Data — official public source.
@@ -164,3 +166,17 @@ export const getInspectionFeed = cache(async () => {
     return { events: groupIntoEvents(feed.rows as ViolationRow[]), saved: true, observedAt: feed.oldestObservation, stale: feed.stale, importError: Boolean(feed.freshness.error) };
   } finally { await store.close(); }
 });
+
+export async function getInspectionDetail(business: string, serial: string, date: string) {
+  if (process.env.NF_PILOT_VERIFIED !== "yes") {
+    return { event: groupIntoEvents(await readOfficialInspection(business, serial, date))[0] ?? null, saved: false, observedAt: null as string | null };
+  }
+  const store = openPostgres();
+  try {
+    const id = createHash('sha256').update(JSON.stringify([business, serial])).digest('hex');
+    const detail = await store.detail(id);
+    if (!detail?.active || !detail.completeEvent) return { event: null, saved: true, observedAt: null };
+    const events = groupIntoEvents(detail.rows as ViolationRow[]);
+    return { event: events.find(event => event.businessId === business && event.serialNum === serial && event.inspectionDate === date) ?? null, saved: true, observedAt: detail.observedAt ?? null };
+  } finally { await store.close(); }
+}
