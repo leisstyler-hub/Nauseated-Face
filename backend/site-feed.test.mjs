@@ -4,7 +4,7 @@ import { loadSavedFeed } from './site-feed.mjs';
 
 test('saved feed returns complete original source rows and import freshness', async () => {
   const raw = { ':id': 'synthetic-row', inspection_score: '05.00' };
-  const store = { status: async () => ({ lastSuccess: '2026-11-14', stale: false }), latest: async () => [{ id: 'event' }], detail: async () => ({ active: true, completeEvent: true, rows: [raw], observedAt: '2026-11-13', stale: true }) };
+  const store = { status: async () => ({ lastSuccess: '2026-11-14', stale: false }), latest: async () => [{ id: 'event', businessId: 'B1', inspectionDate: '2026-11-14' }], detail: async () => ({ active: true, completeEvent: true, rows: [raw], observedAt: '2026-11-13', stale: true }) };
   const feed = await loadSavedFeed(store);
   assert.deepEqual(feed.rows, [raw]);
   assert.equal(feed.oldestObservation, '2026-11-13');
@@ -15,4 +15,18 @@ test('saved feed does not substitute data on missing/inactive detail', async () 
   const store = { status: async () => ({}), latest: async () => [{ id: 'event' }], detail: async () => null };
   await assert.rejects(loadSavedFeed(store), /incomplete/);
   assert.deepEqual((await loadSavedFeed({ ...store, latest: async () => [] })).rows, []);
+});
+
+test('main feed shows newest saved event per business without removing history', async () => {
+  const items = [
+    { id: 'old', businessId: 'B1', inspectionDate: '2024-01-31' },
+    { id: 'other', businessId: 'B2', inspectionDate: '2026-11-11' },
+    { id: 'new', businessId: 'B1', inspectionDate: '2026-03-31' },
+  ];
+  const requested = [];
+  const store = { status: async () => ({}), latest: async () => items, detail: async id => { requested.push(id); return { active: true, completeEvent: true, rows: [{ ':id': id }] }; } };
+  const feed = await loadSavedFeed(store);
+  assert.deepEqual(requested, ['other', 'new']);
+  assert.deepEqual(feed.rows.map(r => r[':id']), ['other', 'new']);
+  assert.equal(items.length, 3);
 });

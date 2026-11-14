@@ -8,13 +8,14 @@ export function LatestActivity({ events }: { events: InspectionEvent[] }) {
     <section id="latest" className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-          Recent inspections. Worst first.
+          Latest saved inspection per business. Worst first.
         </h2>
         <span className="text-xs font-semibold text-muted">
           {events.length} records · highest points first
         </span>
       </div>
       <p className="mb-6 text-sm text-muted">
+        Each business appears once, using its newest inspection in this saved sample.
         The four highest-point inspections lead, followed by up to eight
         lowest-point inspections from the recent sample. Lower points deserve
         space too. These are inspection snapshots, not current safety ratings.
@@ -27,7 +28,7 @@ export function LatestActivity({ events }: { events: InspectionEvent[] }) {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((event, i) => (
-            <Fragment key={event.serialNum}>
+            <Fragment key={`${event.businessId}:${event.serialNum}`}>
               <InspectionCard event={event} />
               {i === 2 && (
                 <div className="sm:col-span-2 lg:col-span-3">
