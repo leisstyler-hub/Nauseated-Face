@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { createHash } from "node:crypto";
 import { readOfficialInspection } from "../../backend/inspection-detail.mjs";
-import { openPostgres } from "../../backend/postgres-store.mjs";
+import { openSiteStore, savedStorageEnabled } from "../../backend/production.mjs";
 import { loadSavedFeed } from "../../backend/site-feed.mjs";
 // King County Food Establishment Inspection Data — official public source.
 // https://data.kingcounty.gov/resource/r878-4sxa.json
@@ -157,10 +157,10 @@ export const getRecentInspectionEvents = cache(() =>
 );
 
 export const getInspectionFeed = cache(async () => {
-  if (process.env.NF_PILOT_VERIFIED !== "yes") {
+  if (!savedStorageEnabled()) {
     return { events: await getRecentInspectionEvents(), saved: false, observedAt: null as string | null, stale: false, importError: false };
   }
-  const store = openPostgres();
+  const store = openSiteStore();
   try {
     const feed = await loadSavedFeed(store);
     return { events: groupIntoEvents(feed.rows as ViolationRow[]), saved: true, observedAt: feed.oldestObservation, stale: feed.stale, importError: Boolean(feed.freshness.error) };
@@ -168,10 +168,10 @@ export const getInspectionFeed = cache(async () => {
 });
 
 export async function getInspectionDetail(business: string, serial: string, date: string) {
-  if (process.env.NF_PILOT_VERIFIED !== "yes") {
+  if (!savedStorageEnabled()) {
     return { event: groupIntoEvents(await readOfficialInspection(business, serial, date))[0] ?? null, saved: false, observedAt: null as string | null };
   }
-  const store = openPostgres();
+  const store = openSiteStore();
   try {
     const id = createHash('sha256').update(JSON.stringify([business, serial])).digest('hex');
     const detail = await store.detail(id);
