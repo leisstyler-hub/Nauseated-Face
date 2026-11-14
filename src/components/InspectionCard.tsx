@@ -32,7 +32,7 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
       </div>
 
       <p className="text-nausea font-bold">
-        🤢 {concernPercent(event)}%{" "}
+        {concernPercent(event)}%{" "}
         <span className="text-xs font-normal text-muted">
           Nauseated Face Index v1
         </span>

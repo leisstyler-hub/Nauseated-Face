@@ -14,7 +14,7 @@ export function WeeklyHighlight({
         <p className="eyebrow text-nausea">
           THE HEADLINE WE WISH WE DIDN&apos;T HAVE
         </p>
-        <h2>🤢 This Week&apos;s Worst</h2>
+        <h2>This Week&apos;s Worst</h2>
         <p className="text-muted">
           The inspections that made us lose our appetite.
         </p>
@@ -33,7 +33,7 @@ export function WeeklyHighlight({
       ) : (
         <article className="featured-card">
           <div className="featured-top">
-            <span className="worst-badge">🤢 THIS WEEK&apos;S WORST</span>
+            <span className="worst-badge">THIS WEEK&apos;S WORST</span>
             <time>{formatInspectionDate(event.inspectionDate)}</time>
           </div>
           <div className="featured-title">
@@ -44,7 +44,6 @@ export function WeeklyHighlight({
               </p>
             </div>
             <div className="face-rating">
-              <span aria-hidden>🤢</span>
               <strong>{concernPercent(event)}%</strong>
               <small>Nauseated Face Index v1</small>
             </div>
