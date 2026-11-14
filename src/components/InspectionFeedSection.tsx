@@ -50,7 +50,7 @@ export async function InspectionFeedSection() {
           : `King County data — page retrieved ${formatRefreshedAt(refreshedAt)}`}
       </p>
       <WeeklyHighlight event={weekly} scope={scope} />
-      <LatestActivity events={latest} />
+      <LatestActivity events={latest} saved={Boolean(feed?.saved)} />
     </>
   );
 }
