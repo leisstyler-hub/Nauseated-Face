@@ -29,6 +29,9 @@ export function InspectionTicker({ events }: { events: InspectionEvent[] }) {
                       : "ticker-item"
                   }
                 >
+                  {event.totalViolationPoints >= 50 && (
+                    <span aria-hidden>🤢 </span>
+                  )}
                   {titleCase(event.name)}{" "}
                   <strong>{event.totalViolationPoints} pts</strong>
                 </a>

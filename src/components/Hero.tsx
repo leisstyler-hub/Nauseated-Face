@@ -2,12 +2,13 @@ export function Hero() {
   return (
     <section className="hero">
       <div className="hero-copy">
-        <h1>
+        <p className="eyebrow">
           Seattle&apos;s Irreverent Food-Safety Watchdog.
-        </h1>
-        <p className="hero-tagline">
+        </p>
+        <h1>
           Someone&apos;s Gotta
-          {" "}Clean This{" "}
+          <br />
+          Clean This{" "}
           <span className="text-nausea">
             Cr
             <span
@@ -19,9 +20,9 @@ export function Hero() {
             </span>
             p Up.
           </span>
-        </p>
+        </h1>
         <p className="hero-description">
-          Nauseated Face turns official King County food inspection records
+          🤢 Nauseated Face turns official King County food inspection records
           into readable rankings and stories — with a healthy dose of sarcasm, a
           little drama, and facts that always come first.
         </p>
@@ -35,6 +36,14 @@ export function Hero() {
         </div>
         <p className="text-xs text-muted">
           Independent. Not affiliated with King County Public Health.
+        </p>
+      </div>
+      <div className="hero-mascot" aria-hidden="true">
+        <span>🤢</span>
+        <p>
+          PUBLIC RECORDS.
+          <br />
+          PRIVATE GAG REFLEX.
         </p>
       </div>
     </section>

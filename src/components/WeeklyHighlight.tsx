@@ -33,7 +33,7 @@ export function WeeklyHighlight({
       ) : (
         <article className="featured-card">
           <div className="featured-top">
-            <span className="worst-badge">THIS WEEK&apos;S WORST</span>
+            <span className="worst-badge">🤢 THIS WEEK&apos;S WORST</span>
             <time>{formatInspectionDate(event.inspectionDate)}</time>
           </div>
           <div className="featured-title">
@@ -44,6 +44,7 @@ export function WeeklyHighlight({
               </p>
             </div>
             <div className="face-rating">
+              <span aria-hidden>🤢</span>
               <strong>{concernPercent(event)}%</strong>
               <small>Nauseated Face Index v1</small>
             </div>
