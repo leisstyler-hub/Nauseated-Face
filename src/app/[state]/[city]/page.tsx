@@ -54,7 +54,7 @@ export default async function CityPage({ params }: { params: Promise<{ state: st
         <span className="mx-3 text-muted" aria-hidden>/</span>
         <span className="text-muted">{city.name}</span>
       </nav>
-      <p className="text-xs font-bold tracking-widest text-nausea">PUBLIC RECORDS. PRIVATE GAG REFLEX.</p>
+      <p className="text-xs font-bold tracking-widest text-nausea">PUBLIC RECORDS. THE FULL PICTURE.</p>
       <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">
         {city.name}, {state.code} 🤢
       </h1>
