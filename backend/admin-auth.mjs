@@ -20,6 +20,7 @@ export function createAdminAuth({ database = undefined, secret = '', baseURL = '
 
 export async function ownerSession(auth, headers) {
   if (!auth) return null;
+  if (!(headers.get('cookie') ?? '').split(';').some(cookie => /^\s*(?:__Secure-)?nf-admin\.session_token=/.test(cookie))) return null;
   const session = await auth.api.getSession({ headers });
   return session?.user?.role === 'owner' ? session : null;
 }
