@@ -1,4 +1,3 @@
-import {OfficialResultBadge} from "./OfficialResultBadge";
 import Link from "next/link";
 import type { Establishment } from "@/lib/locations";
 import { formatInspectionDate, titleCase } from "@/lib/format";
@@ -19,11 +18,9 @@ export function EstablishmentCard({ establishment, stateSlug }: { establishment:
             {[e.address && titleCase(e.address), e.city && titleCase(e.city), e.stateCode].filter(Boolean).join(", ")} {e.zip ?? ""}
           </p>
         </div>
-        <OfficialResultBadge result={e.latestResult}/>
       </div>
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
         {e.latestInspectionDate && <span>Latest inspection {formatInspectionDate(e.latestInspectionDate)}</span>}
-        {e.latestScore !== null && <span>Official score as published: {e.latestScore}</span>}
         <span>
           {e.inspectionCount} saved inspection{e.inspectionCount === 1 ? "" : "s"}
         </span>

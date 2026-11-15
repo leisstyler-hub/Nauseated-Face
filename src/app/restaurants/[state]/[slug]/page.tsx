@@ -93,7 +93,6 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
           <dt className="font-semibold text-muted">Latest saved inspection</dt>
           <dd>
             {latest?.inspectionDate ? formatInspectionDate(latest.inspectionDate) : "None saved yet"}
-            <span className="mt-2 block"><OfficialResultBadge result={latest?.fields.inspection_result}/></span>
           </dd>
         </div>
         <div>
