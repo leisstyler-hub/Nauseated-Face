@@ -84,6 +84,13 @@ export class PostgresStore {
     const rows = await query(this.pool, `SELECT j.*, (SELECT count(*) FROM nf_preview.establishments e WHERE e.jurisdiction_id=j.id) AS establishment_count FROM nf_preview.jurisdictions j ORDER BY j.state_name, j.name`);
     return rows.map(r => ({ id: r.id, stateCode: r.state_code, stateName: r.state_name, name: r.name, healthAuthority: r.health_authority, sourceUrl: r.source_url, scoring: JSON.parse(r.scoring_json), coverageStatus: r.coverage_status, enabled: r.enabled, refreshFrequency: r.refresh_frequency, establishmentCount: Number(r.establishment_count) }));
   }
+  // Owner-controlled publication switch. Disabling a jurisdiction removes it from every public
+  // feed (see PUBLISHED) and from refresh/sync; re-seeding never overwrites this runtime value.
+  async setJurisdictionEnabled(id, enabled) {
+    if (!jurisdictionById(id)) return false;
+    const rows = await query(this.pool, 'UPDATE nf_preview.jurisdictions SET enabled=$2 WHERE id=$1 RETURNING id', [id, enabled === true]);
+    return rows.length > 0;
+  }
   async searchEstablishments({ q = '', stateCode = '', city = '', sort = 'date', limit = 20, offset = 0 } = {}) {
     if (!Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isInteger(offset) || offset < 0 || offset > 100000) throw new Error('Invalid search pagination');
     const tsquery = searchQuery(q);
