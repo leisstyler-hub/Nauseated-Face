@@ -1,3 +1,4 @@
+import { getHomeArea } from "@/lib/home-area";
 import { Hero } from "@/components/Hero";
 import { TickerSection } from "@/components/TickerSection";
 import { Suspense } from "react";
@@ -9,11 +10,13 @@ import { NewsletterTeaser } from "@/components/NewsletterTeaser";
 import { AdSlot } from "@/components/AdSlot";
 import { RecordLoader } from "@/components/RecordLoader";
 
-export default function Home() {
+export default async function Home() {
+  const area = await getHomeArea();
   return (
     <>
       <Intro />
       <Suspense
+        key={`ticker-${area.key}`}
         fallback={
           <div className="ticker px-4 py-3 text-xs text-muted">
             <RecordLoader compact />
@@ -27,7 +30,7 @@ export default function Home() {
         <AdSlot kind="top-leaderboard" />
       </div>
 
-      <Suspense fallback={<FeedSkeleton />}>
+      <Suspense key={`feed-${area.key}`} fallback={<FeedSkeleton />}>
         <InspectionFeedSection />
       </Suspense>
 
