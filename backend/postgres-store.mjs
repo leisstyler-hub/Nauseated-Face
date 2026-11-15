@@ -177,6 +177,20 @@ export class PostgresStore {
       inspections: inspections.map(r => ({ id: r.id, businessId: r.business_id, serial: r.serial, inspectionDate: r.inspection_date, fields: JSON.parse(r.fields_json), rowCount: Number(r.row_count), observedAt: r.observed_at, stale: stale(r.observed_at), violations: violations.filter(v => v.event_id === r.id).map(v => ({ description: v.description, type: v.type, points: v.points })), sourceUrl: sourceUrl(r.business_id, r.serial, r.jurisdiction_id) })),
     };
   }
+  async inspectionDeskHistory({jurisdictionId,stateCode,city='',since}) {
+    const params=[jurisdictionId,stateCode,since];
+    const cityClause=city?`AND ${cityKeySql('e.city','e.state_code')}=$4`:'';
+    if(city)params.push(canonicalCityKey(stateCode,city));
+    const rows=await query(this.pool,`SELECT e.id,e.name,e.slug,e.city,e.state_code,i.id AS event_id,i.inspection_date,i.fields_json,
+      coalesce(v.violations,'[]'::json) AS violations
+      FROM nf_preview.establishments e JOIN nf_preview.inspections i ON i.establishment_id=e.id
+      LEFT JOIN (SELECT event_id,json_agg(json_build_object('description',description,'type',type,'points',points) ORDER BY source_id) AS violations FROM nf_preview.violations GROUP BY event_id) v ON v.event_id=i.id
+      WHERE e.jurisdiction_id=$1 AND e.state_code=$2 AND i.inspection_date >= $3 AND e.${PUBLISHED} ${cityClause}
+      ORDER BY e.id,i.inspection_date DESC,i.id`,params);
+    const businesses=new Map();
+    for(const r of rows){const b=businesses.get(r.id)??{id:r.id,name:r.name,slug:r.slug,city:r.city,stateCode:r.state_code,events:[]};b.events.push({id:r.event_id,date:r.inspection_date,fields:JSON.parse(r.fields_json),violations:r.violations});businesses.set(r.id,b);}
+    return [...businesses.values()];
+  }
   async feedRows(ids) {
     if (!ids.length) return [];
     return query(this.pool, 'SELECT s.event_id,s.raw_json,f.finished_at AS observed_at FROM nf_preview.source_rows s JOIN nf_preview.inspections i ON i.id=s.event_id JOIN nf_preview.refresh_runs f ON f.id=i.last_run WHERE s.active AND s.event_id=ANY($1::text[]) ORDER BY s.event_id,s.source_id', [ids]);

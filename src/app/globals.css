@@ -654,3 +654,23 @@ button {
   vertical-align: -0.15em;
   object-fit: contain;
 }
+
+/* History-backed Inspection Desk: reflow evidence, never squeeze desktop rows. */
+.inspection-desk .category-panel {padding:24px;min-width:0;align-content:start;}
+.inspection-desk .category-nav {align-self:start;}
+.inspection-desk .desk-period {font-size:12px!important;font-family:monospace;overflow-wrap:anywhere;}
+.desk-count {margin:16px 0;}
+.desk-notice {padding:14px;margin:16px 0;border:1px solid #43513a;border-radius:8px;font-size:13px;line-height:1.7;}
+.desk-notice a,.desk-footnote a,.desk-history {color:var(--nausea);text-decoration:underline;text-underline-offset:3px;}
+.desk-list {list-style:none;padding:0;margin:20px 0;display:grid;gap:12px;}
+.desk-list li {padding:18px;background:#121910;border:1px solid #34432c;border-radius:8px;min-width:0;}
+.desk-business {display:flex;align-items:flex-start;gap:12px;}
+.desk-rank {font:12px monospace;color:#a3ba92;padding-top:4px;min-width:20px;}
+.desk-business h4 {font-size:16px;font-weight:750;line-height:1.5;overflow-wrap:anywhere;}
+.desk-business h4 a:hover {text-decoration:underline;color:var(--nausea);}
+.desk-evidence {font-size:13px;line-height:1.8;margin:12px 0;overflow-wrap:anywhere;}
+.desk-evidence p {color:#b8c2b1;}
+.desk-history {font-size:12px;display:inline-block;padding:6px 0;}
+.desk-footnote {line-height:1.8;margin-top:22px;}
+.inspection-desk button:focus-visible,.inspection-desk a:focus-visible {outline:2px solid var(--nausea);outline-offset:4px;}
+@media(max-width:767px){.inspection-desk .category-panel{padding:18px;}.inspection-desk .category-panel h3{font-size:25px;}.desk-list li{padding:14px;}.desk-business{gap:8px;}.inspection-desk .category-nav button{min-height:48px;white-space:normal;}.inspection-desk .category-layout{grid-template-columns:minmax(0,1fr);}}

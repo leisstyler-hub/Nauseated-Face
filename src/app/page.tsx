@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { Intro } from "@/components/Intro";
 import { InspectionFeedSection } from "@/components/InspectionFeedSection";
 import { FeedSkeleton } from "@/components/FeedSkeleton";
-import { CategoryGrid } from "@/components/CategoryGrid";
+import { InspectionDeskSection } from "@/components/InspectionDeskSection";
 import { NewsletterTeaser } from "@/components/NewsletterTeaser";
 import { AdSlot } from "@/components/AdSlot";
 import { RecordLoader } from "@/components/RecordLoader";
@@ -35,7 +35,7 @@ export default async function Home() {
         <InspectionFeedSection />
       </Suspense> : <LocationPrompt/>}
 
-      {area.selected && <CategoryGrid />}
+      {area.selected && <Suspense key={`desk-${area.key}`} fallback={<section className="categories"><RecordLoader /></section>}><InspectionDeskSection /></Suspense>}
       <NewsletterTeaser />
     </>
   );

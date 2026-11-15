@@ -172,3 +172,15 @@ test('scheduled collector isolates failures, retains prior data and respects sou
     assert.match((await store.status()).error, /Import failed/, 'Chicago success cannot hide King County failure');
   } finally { await db.close(); }
 });
+
+test('inspection desk reads all scoped history, canonical city aliases, and respects disabled sources',async()=>{
+ const {db,store}=await open();
+ try{
+  await importPostgres(store,source([row('d1','D1','DI1',{city:'SEATTLE',inspection_date:'2026-10-01',inspection_type:'Routine Inspection/Field Review'}),row('d2','D1','DI2',{city:'Seattle',inspection_date:'2026-11-01',inspection_type:'Routine Inspection/Field Review'}),row('d3','D2','DI3',{city:'Bellevue',inspection_date:'2026-11-01'})]),{type:'all'});
+  const history=await store.inspectionDeskHistory({jurisdictionId:'wa-king',stateCode:'WA',city:'seattle',since:'2025-01-01'});
+  assert.equal(history.length,1);assert.equal(history[0].events.length,2);assert.equal(history[0].events[0].violations[0].description,'Synthetic finding');
+  assert.equal((await store.inspectionDeskHistory({jurisdictionId:'wa-king',stateCode:'WA',since:'2025-01-01'})).length,2);
+  await db.query("UPDATE nf_preview.jurisdictions SET enabled=false WHERE id='wa-king'");
+  assert.equal((await store.inspectionDeskHistory({jurisdictionId:'wa-king',stateCode:'WA',since:'2025-01-01'})).length,0);
+ }finally{await db.close();}
+});
