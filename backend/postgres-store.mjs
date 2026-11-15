@@ -151,6 +151,11 @@ export class PostgresStore {
     const rows = await query(this.pool, `SELECT state_code, slug FROM nf_preview.establishments WHERE ${PUBLISHED} ORDER BY state_code, slug LIMIT $1`, [limit]);
     return rows.map(r => ({ stateCode: r.state_code, slug: r.slug }));
   }
+  async businessProfiles(jurisdictionId, officialIds) {
+    if (!officialIds.length) return [];
+    const rows=await query(this.pool,`SELECT official_id,slug,state_code FROM nf_preview.establishments WHERE ${PUBLISHED} AND jurisdiction_id=$1 AND official_id=ANY($2::text[])`,[jurisdictionId,officialIds]);
+    return rows.map(r=>({officialId:r.official_id,slug:r.slug,stateCode:r.state_code}));
+  }
   async coveredCities() {
     const rows = await query(this.pool, `WITH dates AS (SELECT establishment_id,min(inspection_date) AS first,max(inspection_date) AS last FROM nf_preview.inspections GROUP BY establishment_id)
       SELECT e.state_code,e.city,e.jurisdiction_id,count(*) AS n,sum(e.inspection_count)::int AS inspections,min(d.first) AS first,max(d.last) AS last,

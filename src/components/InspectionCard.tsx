@@ -13,7 +13,7 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-lg font-bold leading-snug">
-            {titleCase(event.name)}
+            {event.profileHref ? <Link href={event.profileHref} className="transition-colors hover:text-nausea underline decoration-nausea/40 underline-offset-4">{titleCase(event.name)}</Link> : titleCase(event.name)}
           </h3>
           <p className="text-sm text-muted">
             {titleCase(event.address)}, {titleCase(event.city)}

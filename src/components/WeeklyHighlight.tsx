@@ -41,7 +41,7 @@ export function WeeklyHighlight({
           </div>
           <div className="featured-title">
             <div>
-              <h3>{titleCase(event.name)}</h3>
+              <h3>{event.profileHref ? <Link href={event.profileHref} className="transition-colors hover:text-nausea underline decoration-nausea/40 underline-offset-4">{titleCase(event.name)}</Link> : titleCase(event.name)}</h3>
               <p className="text-muted">
                 {titleCase(event.address)}, {titleCase(event.city)}
               </p>

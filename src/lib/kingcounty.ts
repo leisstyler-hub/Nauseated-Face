@@ -29,6 +29,7 @@ export interface ViolationRow {
 }
 
 export interface InspectionEvent {
+  profileHref?: string;
   serialNum: string;
   businessId: string;
   name: string;
@@ -156,6 +157,12 @@ export const getRecentInspectionEvents = cache(() =>
   fetchRecentInspectionEvents(100),
 );
 
+async function withProfileLinks(store:ReturnType<typeof openSiteStore>,events:InspectionEvent[]):Promise<InspectionEvent[]>{
+  const profiles:{officialId:string;slug:string;stateCode:string}[]=await store.businessProfiles('wa-king',[...new Set(events.map(e=>e.businessId))]);
+  const paths=new Map<string,string>(profiles.filter(p=>p.stateCode==='WA').map(p=>[p.officialId,`/restaurants/washington/${p.slug}`] as [string,string]));
+  return events.map(event=>({...event,profileHref:paths.get(event.businessId)}));
+}
+
 export const getInspectionFeed = cache(async () => {
   const { getHomeArea } = await import("./home-area");
   const area = await getHomeArea();
@@ -167,7 +174,7 @@ export const getInspectionFeed = cache(async () => {
   try {
     const [feed, coverage] = await Promise.all([loadSavedFeed(store,100,area.city,true),store.feedCoverage(area.city)]);
     if (!area.covered || area.jurisdictionId !== 'wa-king') feed.rows = [];
-    const weeklyEvents = groupIntoEvents(feed.rows as ViolationRow[]);
+    const weeklyEvents = await withProfileLinks(store,groupIntoEvents(feed.rows as ViolationRow[]));
     const seen = new Set<string>();
     const events = weeklyEvents.filter(event => { if(seen.has(event.businessId)) return false; seen.add(event.businessId); return true; });
     return { events, weeklyEvents, area, coverage, saved: true, observedAt: feed.oldestObservation, stale: feed.stale, importError: Boolean(feed.freshness.error) };
@@ -183,7 +190,7 @@ export async function getInspectionDetail(business: string, serial: string, date
     const id = createHash('sha256').update(JSON.stringify([business, serial])).digest('hex');
     const detail = await store.detail(id);
     if (!detail?.active || !detail.completeEvent) return { event: null, saved: true, observedAt: null };
-    const events = groupIntoEvents(detail.rows as ViolationRow[]);
+    const events = await withProfileLinks(store,groupIntoEvents(detail.rows as ViolationRow[]));
     return { event: events.find(event => event.businessId === business && event.serialNum === serial && event.inspectionDate === date) ?? null, saved: true, observedAt: detail.observedAt ?? null };
   } finally { await store.close(); }
 }

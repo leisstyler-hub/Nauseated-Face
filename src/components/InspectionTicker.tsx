@@ -44,7 +44,7 @@ export function InspectionTicker({ events }: { events: InspectionEvent[] }) {
               {events.slice(0, 12).map((event) => (
                 <Link
                   key={`${event.businessId}:${event.serialNum}:${event.inspectionDate}`}
-                  href={inspectionPath(event)}
+                  href={event.profileHref ?? inspectionPath(event)}
                   prefetch={false}
                   tabIndex={copy === 0 && repeat === 0 ? 0 : -1}
                   className={

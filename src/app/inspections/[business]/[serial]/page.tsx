@@ -26,7 +26,7 @@ export default async function InspectionPage({ params, searchParams }: {
     <article className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       <nav aria-label="Breadcrumb" className="mb-8 text-sm text-nausea"><Link href="/inspections" className="underline underline-offset-4">Back to inspections</Link><span className="mx-3 text-muted" aria-hidden>/</span><span className="text-muted">Full record</span></nav>
       <p className="text-xs font-bold tracking-widest text-nausea">THE WHOLE INSPECTION. NO CHERRY-PICKING.</p>
-      <h1 className="mt-3 break-words text-3xl font-extrabold tracking-tight sm:text-5xl">{titleCase(event.name)}</h1>
+      <h1 className="mt-3 break-words text-3xl font-extrabold tracking-tight sm:text-5xl">{event.profileHref ? <Link href={event.profileHref} className="transition-colors hover:text-nausea underline decoration-nausea/40 underline-offset-4">{titleCase(event.name)}</Link> : titleCase(event.name)}</h1>
       <p className="mt-3 text-muted">{titleCase(event.address)}, {titleCase(event.city)} {event.zipCode}</p>
       <div className="my-6 flex flex-wrap items-center gap-3 text-sm"><time dateTime={event.inspectionDate}>{formatInspectionDate(event.inspectionDate)}</time><span className="text-muted">{event.inspectionType}</span><OfficialResultBadge result={event.result}/></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
