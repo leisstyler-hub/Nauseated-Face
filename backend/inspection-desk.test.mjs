@@ -29,3 +29,11 @@ test('future and stale records do not earn recent awards; missing scores are not
 test('a routine with a later educational or return visit keeps the routine history intact',()=>{
  const r=report([business('a',[event('2026-09-01','50'),event('2026-10-20','20'),event('2026-11-01','0',{fields:{inspection_type:'Return Inspection',inspection_score:'0'}})])]);assert.equal(r.categories.find(c=>c.id==='comebacks').items[0].score,20);
 });
+
+test('evidence lists paginate without truncating eligibility; awards remain capped',()=>{
+ const entries=Array.from({length:80},(_,i)=>business('business-'+String(i).padStart(3,'0'),[event('2026-10-01','20',{violations:[{description:'0200 - example',type:'RED'}]}),event('2026-11-01','10',{violations:[{description:'0200 - example',type:'RED'}]})]));
+ const second=buildInspectionDesk(entries,{strategy:'king_county_points',today:'2026-11-15',offset:50});assert.equal(second.categories.find(c=>c.id==='red').items.length,30);assert.equal(second.categories.find(c=>c.id==='red').total,80);assert.equal(second.categories.find(c=>c.id==='comebacks').items.length,10);
+});
+test('closure findings older than trend window are retained as dated history',()=>{
+ const r=report([business('a',[event('2021-01-01','100',{fields:{inspection_closed_business:'Yes'}})])]);assert.equal(r.categories.find(c=>c.id==='closures').total,1);
+});

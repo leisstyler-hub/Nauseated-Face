@@ -185,7 +185,7 @@ export class PostgresStore {
       coalesce(v.violations,'[]'::json) AS violations
       FROM nf_preview.establishments e JOIN nf_preview.inspections i ON i.establishment_id=e.id
       LEFT JOIN (SELECT event_id,json_agg(json_build_object('description',description,'type',type,'points',points) ORDER BY source_id) AS violations FROM nf_preview.violations GROUP BY event_id) v ON v.event_id=i.id
-      WHERE e.jurisdiction_id=$1 AND e.state_code=$2 AND i.inspection_date >= $3 AND e.${PUBLISHED} ${cityClause}
+      WHERE e.jurisdiction_id=$1 AND e.state_code=$2 AND (i.inspection_date >= $3 OR (i.fields_json::jsonb)->>'inspection_closed_business'='Yes') AND e.${PUBLISHED} ${cityClause}
       ORDER BY e.id,i.inspection_date DESC,i.id`,params);
     const businesses=new Map();
     for(const r of rows){const b=businesses.get(r.id)??{id:r.id,name:r.name,slug:r.slug,city:r.city,stateCode:r.state_code,events:[]};b.events.push({id:r.event_id,date:r.inspection_date,fields:JSON.parse(r.fields_json),violations:r.violations});businesses.set(r.id,b);}

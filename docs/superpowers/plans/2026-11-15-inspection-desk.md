@@ -19,7 +19,11 @@ Spec: RESEARCH/NAUSEATED_FACE_INSPECTION_DESK_AUDIT_2026_11_15.md plus Tyler app
 - [x] Pure aggregation tests first: windows, score nulls, educational exclusions, exact repeated codes, per-business uniqueness, minimum sample, unknown closure state and unsupported sources. Run full backend suite red then green.
 - [x] Add parameterized inspectionDeskHistory(area) query returning histories and violations in one query under enabled-source guards; PGlite integration verifies city aliases and disabled sources.
 - [x] Replace placeholder CategoryGrid, add Suspense server loader, responsive lists and explicit history/source/region links. Missing DB is an unavailable state.
-- [ ] Full backend/frontend suites, lint/build; independent fresh reread for historical-labeling and boundary errors. Hosted five-width all-category/browser check and source snapshot parity before promotion.
+- [x] Full backend/frontend suites, lint/build; independent fresh reread for historical-labeling and boundary errors. Hosted five-width all-category/browser check and source snapshot parity before promotion.
 - [ ] Signed commit, push existing PR, staged production build, verify then promote and restore automatic deployment. Publish exact state and closure-source limitation.
 
 Ruling: Public Health HTML rejected automated access (HTTP 403) during audit. Deliver historical closure findings with explicit unknown current status and authority link. Do not synthesize reopening confirmation or silently remove history. This limitation must appear in closeout.
+
+Hosted candidate matched all seven Seattle lists at all five widths against the full source snapshot. Audit initially missed a Seattle punctuation variant; canonical city matching fixed the audit, not native records. Fresh review caught wider-area localStorage shape mismatch; corrected to the existing label/href JSON contract before final promotion.
+
+Ruling: Evidence categories paginate every qualifying business; only the requested awards are capped (10 comebacks, 50 clean plate). Closure queries retain all saved closure events, including those older than the two-year trend window. Native records are unchanged.

@@ -11,15 +11,16 @@ const codes=e=>new Set(e.violations.map(v=>String(v.description??'').match(/^\s*
 const red=e=>new Set(e.violations.filter(v=>String(v.type).toUpperCase()==='RED').map(v=>String(v.description))).size;
 const count=e=>new Set(e.violations.filter(v=>v.description).map(v=>String(v.description))).size;
 const tie=(a,b)=>a.name.localeCompare(b.name)||a.id.localeCompare(b.id);
-/** @param {Array<object>} businesses @param {{strategy?:string|null,today?:string}} options */
-export function buildInspectionDesk(businesses,{strategy=null,today=pacificDate()}={}){
+/** @param {Array<object>} businesses @param {{strategy?:string|null,today?:string,offset?:number}} options */
+export function buildInspectionDesk(businesses,{strategy=null,today=pacificDate(),offset=0}={}){
  if(strategy!=='king_county_points')return {supported:false,categories:[],today};
  const first=today.slice(0,7)+'-01', monthEnd=shift(first,-1),monthStart=monthEnd.slice(0,7)+'-01';
  const start=shift(today,-29),historyStart=`${Number(today.slice(0,4))-2}${today.slice(4)}`,recentStart=`${Number(today.slice(0,4))-1}${today.slice(4)}`;
  const lists={monthly:[],red:[],repeats:[],closures:[],violations:[],comebacks:[],clean:[]};
  for(const b of businesses){
   const base={id:b.id,name:b.name,city:b.city,href:`/restaurants/${stateSlug(b.stateCode==='WA'?'Washington':b.stateCode)}/${b.slug}`};
-  const events=b.events.map(e=>({...e,date:day(e.date),score:number(e.fields?.inspection_score),violations:e.violations??[]})).filter(e=>e.date>=historyStart&&e.date<=today).sort(dateOrder);
+  const dated=b.events.map(e=>({...e,date:day(e.date),score:number(e.fields?.inspection_score),violations:e.violations??[]})).filter(e=>e.date&&e.date<=today).sort(dateOrder);
+  const events=dated.filter(e=>e.date>=historyStart);
   // Two same-day events do not establish a longitudinal trend. Pick the most
   // conservative score on that day, retaining exact source inspections elsewhere.
   const dates=new Map();for(const e of events.filter(routine)){const prior=dates.get(e.date);if(!prior||(e.score??-1)>(prior.score??-1))dates.set(e.date,e);}
@@ -31,7 +32,7 @@ export function buildInspectionDesk(businesses,{strategy=null,today=pacificDate(
    const most=[...monthly].sort((a,b)=>count(b)-count(a)||dateOrder(a,b))[0];
    if(count(most)>0)lists.violations.push({...base,date:most.date,count:count(most)});
   }
-  const closure=events.find(e=>String(e.fields?.inspection_closed_business).toLowerCase()==='yes');
+  const closure=dated.find(e=>String(e.fields?.inspection_closed_business).toLowerCase()==='yes');
   if(closure)lists.closures.push({...base,date:closure.date,status:'Current status unverified'});
   if(!latest||latest.date<recentStart)continue;
   const trend=routines.slice(0,3);
@@ -49,10 +50,10 @@ export function buildInspectionDesk(businesses,{strategy=null,today=pacificDate(
  ['monthly','Monthly Hall of Shame',`${monthStart} to ${monthEnd}`,'Highest official points on a routine inspection in the previous completed month. One entry per business; later routine findings are shown for context.',20,(a,b)=>b.score-a.score||tie(a,b)],
  ['red','Red Violation Report',historyPeriod,'Latest up to three routine inspections, minimum two distinct dates. Critical-finding counts show direction, including improvements. Historical findings do not establish current conditions.',50,(a,b)=>b.count-a.count||tie(a,b)],
  ['repeats','Repeated Violations',historyPeriod,'The same official violation code on the latest two routine inspection dates. Recurrence does not establish that a problem remained uncorrected between visits.',50,(a,b)=>b.count-a.count||tie(a,b)],
- ['closures','Closed Kitchen Watch',`${historyStart} to ${today}`,'Closure recorded at a past inspection. Current closure or reopening status is not confirmed by this dataset. Check the authority updates before treating any business as closed.',50,(a,b)=>b.date.localeCompare(a.date)||tie(a,b)],
+ ['closures','Closed Kitchen Watch',`All saved closure findings through ${today}`,'Closure recorded at a past inspection. Current closure or reopening status is not confirmed by this dataset. Check the authority updates before treating any business as closed.',50,(a,b)=>b.date.localeCompare(a.date)||tie(a,b)],
  ['violations','Most Violations',`${monthStart} to ${monthEnd}`,'Most distinct recorded violation items on a routine inspection in the previous completed month. One entry per business; counts are separate from weighted points.',20,(a,b)=>b.count-a.count||tie(a,b)],
  ['comebacks','Recent Comebacks',`${start} to ${today}`,'Largest point drops from the previous routine inspection to the latest routine inspection within these 30 days. Educational visits and targeted return inspections do not qualify.',10,(a,b)=>b.change-a.change||tie(a,b)],
  ['clean','Clean Plate Award',historyPeriod,'Lowest mean official points across the latest two or three routine inspections. Ties favor the lower maximum, then latest points. At least two distinct dates required. Historical performance is not a current-safety guarantee.',50,(a,b)=>a.mean-b.mean||a.max-b.max||a.score-b.score||tie(a,b)],
  ];
- return {supported:true,today,categories:definitions.map(([id,name,period,description,limit,sort])=>({id,name,period,description,limit,total:lists[id].length,items:lists[id].sort(sort).slice(0,limit)}))};
+ return {supported:true,today,categories:definitions.map(([id,name,period,description,limit,sort])=>({id,name,period,description,limit,total:lists[id].length,items:lists[id].sort(sort).slice(['comebacks','clean'].includes(id)?0:offset,(['comebacks','clean'].includes(id)?0:offset)+limit)}))};
 }
