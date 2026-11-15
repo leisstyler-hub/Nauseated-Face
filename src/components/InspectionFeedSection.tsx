@@ -55,7 +55,7 @@ export async function InspectionFeedSection() {
     <>
       <p className="mx-auto max-w-6xl px-4 pt-6 text-right text-xs text-muted sm:px-6">
         {feed?.saved
-          ? `${area.label}: saved King County records — oldest observation ${feed.observedAt ? formatRefreshedAt(new Date(feed.observedAt)) : 'not yet available'}. ${feed.stale ? 'Some records need refreshing.' : ''} ${feed.importError ? 'Last import attempt failed; showing the last saved records.' : ''} ${area.description}`
+          ? `${area.label}: saved King County records — last refreshed ${feed.observedAt ? formatRefreshedAt(new Date(feed.observedAt)) : 'not yet available'}. ${feed.stale ? 'Some records need refreshing.' : ''} ${feed.importError ? 'Last import attempt failed; showing the last saved records.' : ''} ${area.description}`
           : `${area.label}: King County data — page retrieved ${formatRefreshedAt(refreshedAt)}`}
       </p>
       {feed?.coverage && <p className="mx-auto max-w-6xl px-4 pt-3 text-sm leading-7 text-muted sm:px-6">{area.label}: <strong className="text-foreground">{feed.coverage.inspections.toLocaleString('en-US')} saved inspections</strong> across {feed.coverage.businesses.toLocaleString('en-US')} businesses{feed.coverage.first && feed.coverage.last ? `, ${formatInspectionDate(feed.coverage.first)} to ${formatInspectionDate(feed.coverage.last)}` : ''}. The homepage shows recent records; search and business profiles include saved history. Published source records may not include every inspection ever performed.</p>}

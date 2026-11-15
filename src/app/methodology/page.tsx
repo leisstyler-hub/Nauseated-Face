@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Face } from "@/components/Face";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
@@ -10,7 +11,7 @@ export default function MethodologyPage() {
     <LegalPage title="Data Methodology" updated="November 14, 2026">
       <h2>Source</h2>
       <p>
-        All inspection data comes directly from the{" "}
+        King County inspection data comes directly from the{" "}
         <a
           href={SOURCE_DATASET_URL}
           target="_blank"
@@ -52,8 +53,8 @@ export default function MethodologyPage() {
       </p>
       <p>
         This Week&apos;s Worst selects the highest violation-point total among
-        inspections dated in the past seven days within our sample of the latest
-        100 inspection events. It is not an exhaustive countywide ranking. An
+        inspections dated in the past seven days for the selected city or region.
+        King County uses the full saved published-source history, not a 100-event import cutoff. An
         inspection needs at least 20 violation points, an unsatisfactory result,
         or a recorded closure to qualify. Ties use red violation count, then
         inspection date. If none qualifies, we show an empty state. The activity
@@ -77,6 +78,8 @@ export default function MethodologyPage() {
         <li>Reinspection outcomes, including passed reinspections</li>
       </ul>
 
+      <h2>Coverage and history dates</h2>
+      <p>Each source has its own published history and update schedule. See <Link href="/coverage" className="text-nausea underline">Data Sources &amp; Coverage</Link> for the earliest and latest saved inspection dates, record counts, last successful refresh and partial-source limitations.</p>
       <h2>Limitations</h2>
       <p>
         Inspection records are a snapshot of conditions observed on a specific

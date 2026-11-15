@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import pg from 'pg';
+import {canonicalCityKey,cityKeySql} from './location-catalog.mjs';
 import { SOURCE } from './source.mjs';
 import { ADAPTERS } from './adapters/index.mjs';
 import { citySlug, seedJurisdictions, jurisdictionById } from './jurisdictions.mjs';
@@ -92,7 +93,7 @@ export class PostgresStore {
   async feedCoverage(city = '') {
     const [row] = await query(this.pool, `SELECT count(*)::int AS inspections,count(DISTINCT i.business_id)::int AS businesses,min(i.inspection_date) AS first,max(i.inspection_date) AS last
       FROM nf_preview.inspections i JOIN nf_preview.establishments e ON e.id=i.establishment_id
-      WHERE i.jurisdiction_id='wa-king' AND i.jurisdiction_id IN (SELECT id FROM nf_preview.jurisdictions WHERE enabled AND coverage_status IN ('available','limited')) AND ($1::text='' OR lower(trim(e.city))=lower($1))`,[city]);
+      WHERE i.jurisdiction_id='wa-king' AND i.jurisdiction_id IN (SELECT id FROM nf_preview.jurisdictions WHERE enabled AND coverage_status IN ('available','limited')) AND ($1::text='' OR ${cityKeySql('e.city','e.state_code')}=$1)`,[canonicalCityKey('WA',city)]);
     return row;
   }
   async homeFeed(limit = 100, jurisdictionId = 'wa-king', city = '', since = null) {
@@ -101,17 +102,24 @@ export class PostgresStore {
       SELECT ${since ? '' : 'DISTINCT ON (i.business_id)'} i.* FROM nf_preview.inspections i
       JOIN nf_preview.establishments e ON e.id=i.establishment_id
       WHERE i.jurisdiction_id=$2 AND i.jurisdiction_id IN (SELECT id FROM nf_preview.jurisdictions WHERE enabled AND coverage_status IN ('available','limited'))
-        AND ($3::text='' OR lower(trim(e.city))=lower($3))
+        AND ($3::text='' OR ${cityKeySql('e.city','e.state_code')}=$3)
         AND ($4::text IS NULL OR i.inspection_date >= $4)
       ORDER BY i.business_id,i.inspection_date DESC,i.id
     ) latest JOIN nf_preview.refresh_runs f ON f.id=latest.last_run
-    ORDER BY latest.inspection_date DESC,latest.id LIMIT CASE WHEN $4::text IS NULL THEN $1::int ELSE NULL END`, [limit,jurisdictionId,city,since]);
+    ORDER BY latest.inspection_date DESC,latest.id LIMIT CASE WHEN $4::text IS NULL THEN $1::int ELSE NULL END`, [limit,jurisdictionId,canonicalCityKey(jurisdictionById(jurisdictionId)?.stateCode??'',city),since]);
     return rows.map(r => ({id:r.id,businessId:r.business_id,serial:r.serial,inspectionDate:r.inspection_date,fields:JSON.parse(r.fields_json),rowCount:Number(r.row_count),observedAt:r.observed_at,jurisdictionId:r.jurisdiction_id}));
   }
   async catalog() {
-    const rows = await query(this.pool, `SELECT j.*, (SELECT count(*) FROM nf_preview.establishments e WHERE e.jurisdiction_id=j.id) AS establishment_count FROM nf_preview.jurisdictions j ORDER BY j.state_name, j.name`);
-    return rows.map(r => ({ id: r.id, stateCode: r.state_code, stateName: r.state_name, name: r.name, healthAuthority: r.health_authority, sourceUrl: r.source_url, scoring: JSON.parse(r.scoring_json), coverageStatus: r.coverage_status, enabled: r.enabled, refreshFrequency: r.refresh_frequency, establishmentCount: Number(r.establishment_count) }));
+    const rows = await query(this.pool, `WITH stats AS (SELECT jurisdiction_id,count(*)::int AS inspections,min(inspection_date) AS first,max(inspection_date) AS last FROM nf_preview.inspections GROUP BY jurisdiction_id)
+      SELECT j.*,coalesce(s.inspections,0) AS inspection_count,s.first AS first_inspection_date,s.last AS last_inspection_date,
+      (SELECT count(*) FROM nf_preview.establishments e WHERE e.jurisdiction_id=j.id) AS establishment_count,
+      (SELECT finished_at FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id AND r.status='success' ORDER BY r.id DESC LIMIT 1) AS last_success,
+      (SELECT status FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id ORDER BY r.id DESC LIMIT 1) AS last_attempt_status,
+      (SELECT scope->>'type'='all' FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id AND r.status='success' ORDER BY r.id DESC LIMIT 1) AS full_import_verified
+      FROM nf_preview.jurisdictions j LEFT JOIN stats s ON s.jurisdiction_id=j.id ORDER BY j.state_name,j.name`);
+    return rows.map(r => ({ id:r.id,stateCode:r.state_code,stateName:r.state_name,name:r.name,healthAuthority:r.health_authority,sourceUrl:r.source_url,scoring:JSON.parse(r.scoring_json),coverageStatus:r.full_import_verified&&['available','limited'].includes(r.coverage_status)?'available':r.coverage_status,enabled:r.enabled,refreshFrequency:r.refresh_frequency,establishmentCount:Number(r.establishment_count),inspectionCount:Number(r.inspection_count),firstInspectionDate:r.first_inspection_date,lastInspectionDate:r.last_inspection_date,lastSuccess:r.last_success,fullImportVerified:!!r.full_import_verified,lastAttemptStatus:r.last_attempt_status??null }));
   }
+
   // Owner-controlled publication switch. Disabling a jurisdiction removes it from every public
   // feed (see PUBLISHED) and from refresh/sync; re-seeding never overwrites this runtime value.
   async setJurisdictionEnabled(id, enabled) {
@@ -128,14 +136,14 @@ export class PostgresStore {
     const clauses = [PUBLISHED, `${SEARCH_VECTOR} @@ to_tsquery('simple', $1)`];
     const params = [tsquery];
     if (stateCode) { params.push(stateCode.toUpperCase()); clauses.push(`state_code=$${params.length}`); }
-    if (city) { params.push(city.toLowerCase()); clauses.push(`lower(city)=$${params.length}`); }
+    if (city) { params.push(canonicalCityKey(stateCode,city)); clauses.push(`${cityKeySql('city')}=$${params.length}`); }
     if (jurisdictionId) { params.push(jurisdictionId); clauses.push(`jurisdiction_id=$${params.length}`); }
     params.push(limit, offset);
     const rows = await query(this.pool, `SELECT * FROM nf_preview.establishments WHERE ${clauses.join(' AND ')} ORDER BY ${ordering} LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
     return rows.map(establishmentRow);
   }
   async cityEstablishments(stateCode, city, limit = 50, offset = 0) {
-    const rows = await query(this.pool, `SELECT * FROM nf_preview.establishments WHERE ${PUBLISHED} AND state_code=$1 AND lower(city)=$2 ORDER BY latest_inspection_date DESC NULLS LAST, lower(name), id LIMIT $3 OFFSET $4`, [stateCode.toUpperCase(), city.toLowerCase(), limit, offset]);
+    const rows = await query(this.pool, `SELECT * FROM nf_preview.establishments WHERE ${PUBLISHED} AND state_code=$1 AND ${cityKeySql('city')}=$2 ORDER BY latest_inspection_date DESC NULLS LAST, lower(name), id LIMIT $3 OFFSET $4`, [stateCode.toUpperCase(), canonicalCityKey(stateCode,city), limit, offset]);
     return rows.map(establishmentRow);
   }
   async establishmentSlugs(limit = 5000) {
@@ -143,9 +151,14 @@ export class PostgresStore {
     return rows.map(r => ({ stateCode: r.state_code, slug: r.slug }));
   }
   async coveredCities() {
-    const rows = await query(this.pool, 'SELECT state_code, city, jurisdiction_id, count(*) AS n, avg(latitude) FILTER (WHERE latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180 AND latitude <> 0 AND longitude <> 0) AS latitude, avg(longitude) FILTER (WHERE latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180 AND latitude <> 0 AND longitude <> 0) AS longitude FROM nf_preview.establishments WHERE city IS NOT NULL GROUP BY state_code, city, jurisdiction_id ORDER BY state_code, lower(city)');
-    return rows.map(r => ({ stateCode: r.state_code, city: r.city, jurisdictionId: r.jurisdiction_id, establishmentCount: Number(r.n), latitude: r.latitude === null ? null : Number(r.latitude), longitude: r.longitude === null ? null : Number(r.longitude) }));
+    const rows = await query(this.pool, `WITH dates AS (SELECT establishment_id,min(inspection_date) AS first,max(inspection_date) AS last FROM nf_preview.inspections GROUP BY establishment_id)
+      SELECT e.state_code,e.city,e.jurisdiction_id,count(*) AS n,sum(e.inspection_count)::int AS inspections,min(d.first) AS first,max(d.last) AS last,
+      avg(latitude) FILTER(WHERE latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180 AND latitude<>0 AND longitude<>0) AS latitude,
+      avg(longitude) FILTER(WHERE latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180 AND latitude<>0 AND longitude<>0) AS longitude
+      FROM nf_preview.establishments e LEFT JOIN dates d ON d.establishment_id=e.id WHERE e.city IS NOT NULL GROUP BY e.state_code,e.city,e.jurisdiction_id ORDER BY e.state_code,lower(e.city)`);
+    return rows.map(r=>({stateCode:r.state_code,city:r.city,jurisdictionId:r.jurisdiction_id,establishmentCount:Number(r.n),inspectionCount:Number(r.inspections),firstInspectionDate:r.first,lastInspectionDate:r.last,latitude:r.latitude===null?null:Number(r.latitude),longitude:r.longitude===null?null:Number(r.longitude)}));
   }
+
   async establishmentBySlug(stateCode, slug) {
     const [row] = await query(this.pool, `SELECT * FROM nf_preview.establishments WHERE ${PUBLISHED} AND state_code=$1 AND slug=$2`, [stateCode.toUpperCase(), slug]);
     if (!row) return null;

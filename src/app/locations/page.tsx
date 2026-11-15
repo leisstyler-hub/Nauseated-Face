@@ -18,6 +18,7 @@ export default async function LocationsPage() {
         Every market in our coverage registry, with its real status. A city only becomes “Data Available” after its
         official records are imported and verified — we don’t decorate the map.
       </p>
+      <p className="mb-6 text-sm text-muted">Washington locations are ordered by saved inspection count, highest first. Counts describe historical inspections, not current safety. <Link href="/coverage" className="text-nausea underline">Data sources and date ranges</Link>.</p>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {states.map((state) => (
           <div key={state.code}>
@@ -33,7 +34,7 @@ export default async function LocationsPage() {
                     href={`/${state.slug}/${city.slug}`}
                     className="flex items-baseline justify-between gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-card"
                   >
-                    <span>{city.name}</span>
+                    <span>{city.name}{city.covered&&<span className="mt-0.5 block text-xs text-muted">{city.inspectionCount.toLocaleString("en-US")} inspections</span>}</span>
                     <span className={`text-[10px] font-semibold uppercase tracking-wide ${city.covered ? "text-nausea" : "text-muted"}`}>
                       {STATUS_LABEL[city.status]}
                     </span>

@@ -18,7 +18,7 @@ export function SiteFooter() {
           It is <strong className="text-foreground">not affiliated with, endorsed by, or operated by</strong>{" "}
           any government agency. Inspection findings come from the responsible health authority&apos;s public records,
           identified on each report. Historical results do not establish current conditions.{" "}
-          <Link href="/locations" className="font-medium text-nausea underline underline-offset-2">View sources and coverage</Link>.
+          <Link href="/coverage" className="font-medium text-nausea underline underline-offset-2">View sources and coverage</Link>.
 
         </p>
 

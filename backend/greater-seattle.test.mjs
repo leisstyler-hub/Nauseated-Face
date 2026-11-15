@@ -29,4 +29,6 @@ test('area preferences resolve safely and region does not invent neighboring cou
  assert.match(resolveHomeArea(states).description,/Does not include Pierce or Snohomish/);
  assert.equal(resolveHomeArea(states,'../../bad').key,'washington/greater-seattle');
  assert.equal(resolveHomeArea([]).covered,false);
+ const aliasStates=[{code:'WA',slug:'washington',cities:[{name:'SeaTac',slug:'seatac',jurisdictionId:'wa-king',covered:true}]}];
+ assert.equal(resolveHomeArea(aliasStates,'washington/sea-tac').key,'washington/seatac');
 });

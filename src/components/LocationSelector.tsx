@@ -10,6 +10,7 @@ export interface SelectorCity {
   slug: string;
   statusLabel: string;
   covered: boolean;
+  inspectionCount?: number;
   latitude: number | null;
   longitude: number | null;
 }
@@ -33,7 +34,7 @@ function rememberArea(value: string) {
   document.cookie = `nf-area=${value}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
-export function LocationSelector({ states, initialArea = "washington/greater-seattle" }: { states: SelectorState[]; initialArea?: string }) {
+export function LocationSelector({ states, initialArea = "washington/greater-seattle", regionInspectionCount = 0 }: { states: SelectorState[]; initialArea?: string; regionInspectionCount?: number }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [locating, setLocating] = useState(false);
@@ -158,7 +159,7 @@ export function LocationSelector({ states, initialArea = "washington/greater-sea
             autoFocus
             className="mb-3 w-full rounded-lg border border-card-border bg-card px-3 py-2 text-sm outline-none focus:border-nausea"
           />
-          {(!needle || 'greater seattle king county'.includes(needle)) && <Link href="/" prefetch={false} onClick={() => pick({code:'WA',name:'Washington',slug:'washington',cities:[]},{name:'Greater Seattle',slug:'greater-seattle',statusLabel:'King County cities',covered:true,latitude:null,longitude:null})} className="mb-3 block rounded-lg border border-nausea/40 bg-nausea-soft px-3 py-3 text-sm font-bold text-nausea">Greater Seattle<span className="mt-1 block text-xs font-normal text-muted">King County cities together</span></Link>}
+          {(!needle || 'greater seattle king county'.includes(needle)) && <Link href="/" prefetch={false} onClick={() => pick({code:'WA',name:'Washington',slug:'washington',cities:[]},{name:'Greater Seattle',slug:'greater-seattle',statusLabel:'King County cities',covered:true,latitude:null,longitude:null})} className="mb-3 block rounded-lg border border-nausea/40 bg-nausea-soft px-3 py-3 text-sm font-bold text-nausea">Greater Seattle<span className="mt-1 block text-xs font-normal text-muted">King County cities together{regionInspectionCount>0 ? ` · ${regionInspectionCount.toLocaleString("en-US")} inspections` : ""}</span></Link>}
           {filtered.map((state) => (
             <div key={state.code} className="mb-3">
               <Link
@@ -175,7 +176,7 @@ export function LocationSelector({ states, initialArea = "washington/greater-sea
                       onClick={() => pick(state, city)}
                       className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-card"
                     >
-                      <span>{city.name}</span>
+                      <span>{city.name}{city.covered && <span className="mt-0.5 block text-[11px] font-normal text-muted">{(city.inspectionCount??0).toLocaleString("en-US")} inspections</span>}</span>
                       <span className={`text-[10px] font-semibold uppercase tracking-wide ${city.covered ? "text-nausea" : "text-muted"}`}>
                         {city.statusLabel}
                       </span>

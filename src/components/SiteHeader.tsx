@@ -2,7 +2,7 @@ import { getHomeArea } from "@/lib/home-area";
 import { Face } from "@/components/Face";
 import Link from "next/link";
 import { LocationSelector, type SelectorState } from "@/components/LocationSelector";
-import { STATUS_LABEL, getStates } from "@/lib/locations";
+import { STATUS_LABEL, getStates, getSourceCoverage } from "@/lib/locations";
 
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
@@ -13,6 +13,7 @@ const NAV_LINKS = [
 
 export async function SiteHeader() {
   const area = await getHomeArea();
+  const source = (await getSourceCoverage().catch(()=>[])).find(s=>s.id==="wa-king");
   const states: SelectorState[] = (await getStates()).map((state) => ({
     code: state.code,
     name: state.name,
@@ -22,6 +23,7 @@ export async function SiteHeader() {
       slug: city.slug,
       statusLabel: STATUS_LABEL[city.status],
       covered: city.covered,
+      inspectionCount: city.inspectionCount,
       latitude: city.latitude,
       longitude: city.longitude,
     })),
@@ -56,7 +58,7 @@ export async function SiteHeader() {
           >
             <span aria-hidden>🔍</span>
           </Link>
-          <LocationSelector states={states} initialArea={area.key} />
+          <LocationSelector states={states} initialArea={area.key} regionInspectionCount={source?.enabled ? source.inspectionCount : 0} />
         </div>
       </div>
     </header>

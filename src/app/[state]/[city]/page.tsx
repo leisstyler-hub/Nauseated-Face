@@ -61,9 +61,10 @@ export default async function CityPage({ params }: { params: Promise<{ state: st
       <p className="my-5 max-w-2xl text-sm leading-relaxed text-muted">
         Inspection authority: {city.healthAuthority}. Coverage status: {STATUS_LABEL[city.status]}.
         {city.covered
-          ? " Records below are saved official data — a growing sample of this market, newest first."
+          ? " Records below are saved official data — newest first. See the source coverage and date range below."
           : " This city’s official data has not been integrated yet, so we show no records rather than fake ones."}
       </p>
+      {city.covered && <p className="text-sm leading-7 text-muted">{city.inspectionCount.toLocaleString('en-US')} saved inspections across {city.establishmentCount.toLocaleString('en-US')} businesses{city.firstInspectionDate && city.lastInspectionDate ? `, ${formatInspectionDate(city.firstInspectionDate)} to ${formatInspectionDate(city.lastInspectionDate)}` : ''}. <Link href="/coverage" className="text-nausea underline">Source coverage and refresh details</Link>.</p>}
       <div className="my-8">
         <SearchBox state={state.code} city={city.name} placeholder={`🤢 Search ${city.name} restaurants…`} />
       </div>
