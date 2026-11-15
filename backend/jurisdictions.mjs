@@ -10,7 +10,7 @@ export const JURISDICTIONS = [
     healthAuthority: 'Montgomery County Department of Health and Human Services',
     sourceUrl: 'https://data.montgomerycountymd.gov/Health-and-Human-Services/HHS-Food-Inspection-Data-from-July-2024-and-onward/dkrp-gr48',
     scoring: { type: 'result_only', direction: 'none' },
-    coverageStatus: 'coming_soon', enabled: false, refreshFrequency: 'daily', cities: ['Rockville', 'Gaithersburg', 'Germantown', 'Silver Spring', 'Bethesda'],
+    coverageStatus: 'limited', enabled: true, refreshFrequency: 'daily', cities: ['Rockville', 'Gaithersburg', 'Germantown', 'Silver Spring', 'Bethesda'],
   },
   {
     id: 'il-chicago', stateCode: 'IL', stateName: 'Illinois', name: 'Chicago',

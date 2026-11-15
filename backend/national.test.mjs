@@ -41,7 +41,7 @@ test('migration seeds the jurisdiction catalog and only verified markets are ena
   try {
     const catalog = await store.catalog();
     assert.equal(catalog.length, JURISDICTIONS.length);
-    assert.deepEqual(catalog.filter(j => j.enabled).map(j => j.id), ['wa-king']);
+    assert.deepEqual(catalog.filter(j => j.enabled).map(j => j.id).sort(), ['md-montgomery', 'wa-king']);
     const tn = catalog.find(j => j.id === 'tn-state');
     assert.equal(tn.coverageStatus, 'unavailable');
     assert.equal(tn.scoring.type, 'score_100');
@@ -158,6 +158,7 @@ test('scheduled collector isolates failures, retains prior data and respects sou
   try {
     await importPostgres(store, source([row('1', 'B', 'I')]), { type: 'all' });
     await db.query("UPDATE nf_preview.jurisdictions SET enabled=true WHERE id='il-chicago'");
+    await db.query("UPDATE nf_preview.jurisdictions SET enabled=false WHERE id='md-montgomery'");
     const called = [];
     const result = await syncEnabledSources(store, id => {
       called.push(id);
