@@ -4,6 +4,16 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
+import { headers } from "next/headers";
+
+async function WebsiteShell({ children }: { children: React.ReactNode }) {
+  if ((await headers()).get("x-nf-maintenance") === "1") return children;
+  return <>
+    <Suspense fallback={<header className="h-16 border-b border-card-border" />}><SiteHeader /></Suspense>
+    <main className="flex flex-1 flex-col"><Suspense fallback={<p className="p-8 text-muted">Loading official records...</p>}>{children}</Suspense></main>
+    <SiteFooter />
+  </>;
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,9 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Suspense fallback={<header className="h-16 border-b border-card-border" />}><SiteHeader /></Suspense>
-        <main className="flex flex-1 flex-col"><Suspense fallback={<p className="p-8 text-muted">Loading official records...</p>}>{children}</Suspense></main>
-        <SiteFooter />
+        <Suspense fallback={null}><WebsiteShell>{children}</WebsiteShell></Suspense>
       </body>
     </html>
   );
