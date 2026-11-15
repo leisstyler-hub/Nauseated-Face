@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SearchBox } from "@/components/SearchBox";
 import { EstablishmentCard } from "@/components/EstablishmentCard";
-import { getStates, searchEstablishments } from "@/lib/locations";
+import { getStates, searchEstablishments, searchAcrossCities } from "@/lib/locations";
 
 export const metadata: Metadata = {
   title: "Search restaurant inspections",
@@ -25,16 +25,21 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const page = Number.isInteger(requested) && requested > 0 && requested <= 5000 ? requested : 1;
   const stateSlugByCode = new Map(states.map((s) => [s.code, s.slug]));
   let results: Awaited<ReturnType<typeof searchEstablishments>> = [];
+  let elsewhere: Awaited<ReturnType<typeof searchEstablishments>> = [];
+  let expansionFailed = false;
   let failed = false;
   if (q.trim().length >= 2) {
     try {
-      results = await searchEstablishments(q, state, city, (page - 1) * 20, sort, jurisdiction);
+      const groups = await searchAcrossCities(q, state, city, (page - 1) * 20, sort, jurisdiction);
+      results = groups.local; elsewhere = groups.elsewhere; expansionFailed = groups.expansionFailed;
     } catch {
       failed = true;
     }
   }
   const hasNext = results.length > 20;
   results = results.slice(0, 20);
+  const stateName = states.find(s=>s.code===state)?.name ?? state;
+  const statewideHref = `/search?${new URLSearchParams({q,state,city:"",jurisdiction:"",sort})}`;
   const pageHref = (n: number) => `/search?${new URLSearchParams({ q, state, city, jurisdiction, sort, page: String(n) })}`;
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
@@ -62,13 +67,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       {!failed && q.trim().length >= 2 && (
         <>
           <h2 className="mt-10 text-xl font-bold">
-            {results.length === 0 ? "No matches in covered markets" : `${results.length} result${results.length === 1 ? "" : "s"} on this page`}
+            {results.length === 0 ? city ? `No matches in ${city}` : "No matches in this search" : `${results.length} result${results.length === 1 ? "" : "s"} on this page`}
             <span className="ml-2 text-sm font-normal text-muted">for “{q.trim()}”</span>
           </h2>
           {results.length === 0 ? (
             <p className="mt-4 max-w-2xl text-sm text-muted">
-              Our saved coverage is still a limited sample of each market, so a missing restaurant doesn’t mean a clean
-              history — or any history. Try a shorter name, or browse a covered city from the location menu.
+              No matching saved records were found for these filters. A missing restaurant does not establish a clean history. Try a shorter name or explore the same-state matches below.
             </p>
           ) : (
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -77,6 +81,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
               ))}
             </div>
           )}
+          {city && state && <section className="mt-10 border-t border-card-border pt-6" aria-labelledby="statewide-matches">
+            <h2 id="statewide-matches" className="text-xl font-bold">Elsewhere in {stateName}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Matching saved records outside {city}, within {stateName}. Your homepage city selection stays the same.</p>
+            {expansionFailed ? <p role="status" className="mt-4 text-sm text-warning">Other-city matches are temporarily unavailable. Local results are still shown.</p> : elsewhere.length>0 ? <div className="mt-5 grid gap-4 sm:grid-cols-2">{elsewhere.slice(0,20).map(e=><EstablishmentCard key={e.id} establishment={e} stateSlug={stateSlugByCode.get(e.stateCode)??e.stateCode.toLowerCase()}/>)}</div> : <p className="mt-4 text-sm text-muted">No additional matches in this state.</p>}
+            <Link href={statewideHref} className="mt-5 inline-block text-sm font-bold text-nausea underline">Search all of {stateName}</Link>
+          </section>}
         </>
       )}
     </section>

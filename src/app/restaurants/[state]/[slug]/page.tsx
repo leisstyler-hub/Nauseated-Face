@@ -1,3 +1,5 @@
+import {OfficialResultBadge} from "@/components/OfficialResultBadge";
+import {InspectionHistoryChart} from "@/components/InspectionHistoryChart";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -91,7 +93,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
           <dt className="font-semibold text-muted">Latest saved inspection</dt>
           <dd>
             {latest?.inspectionDate ? formatInspectionDate(latest.inspectionDate) : "None saved yet"}
-            {latest?.fields.inspection_result ? ` — ${latest.fields.inspection_result}` : ""}
+            <span className="mt-2 block"><OfficialResultBadge result={latest?.fields.inspection_result}/></span>
           </dd>
         </div>
         <div>
@@ -112,19 +114,20 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
         and reinspections exist for a reason. Every record links to its original source.
       </p>
 
+      <InspectionHistoryChart inspections={profile.inspections} violationPoints={profile.jurisdiction?.scoring.type === "violation_points"}/>
       <h2 className="text-xl font-bold">Inspection timeline</h2>
       <p className="mt-3 text-sm leading-7 text-muted">{profile.inspections.length} saved inspections{profile.inspections.at(-1)?.inspectionDate && latest?.inspectionDate ? `, ${formatInspectionDate(profile.inspections.at(-1)!.inspectionDate!)} to ${formatInspectionDate(latest.inspectionDate)}` : ''}. This includes historical records available from the published source.</p>
       <ol className="mt-4 flex flex-col gap-4">
         {profile.inspections.map((inspection) => (
-          <li key={inspection.id} className="rounded-xl border border-card-border bg-card p-5">
+          <li key={inspection.id} id={`inspection-${inspection.id}`} className="scroll-mt-24 rounded-xl border border-card-border bg-card p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="font-bold">
                 {inspection.inspectionDate ? formatInspectionDate(inspection.inspectionDate) : "Date not recorded"}
               </span>
               <span className="text-sm text-muted">{inspection.fields.inspection_type ?? ""}</span>
             </div>
-            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-              <span className="font-semibold text-nausea">{inspection.fields.inspection_result ?? "Result not recorded"}</span>
+            <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+              <OfficialResultBadge result={inspection.fields.inspection_result}/>
               {inspection.fields.inspection_score !== undefined && <span className="text-muted">Official score as published: {inspection.fields.inspection_score}</span>}
             </div>
             {inspection.violations.length > 0 ? <div className="mt-4"><h3 className="text-sm font-bold">Official wording: what inspectors found</h3><ul className="mt-2 space-y-3 text-sm text-muted">{inspection.violations.map((v, index) => <li key={index} className="whitespace-pre-wrap break-words">{v.type && <span className="font-semibold">{v.type}: </span>}{v.description}{v.points !== null && <span> ({v.points} points)</span>}</li>)}</ul></div> : <p className="mt-3 text-xs text-muted">No violation wording supplied in this saved record. This is not a current safety rating.</p>}

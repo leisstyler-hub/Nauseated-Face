@@ -1,12 +1,8 @@
+import {OfficialResultBadge} from "./OfficialResultBadge";
 import Link from "next/link";
 import type { Establishment } from "@/lib/locations";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 
-function resultBadgeClasses(result: string | null) {
-  if (result === "Unsatisfactory") return "bg-critical-soft text-critical border-critical/30";
-  if (result === "Satisfactory") return "bg-nausea-soft text-nausea border-nausea/30";
-  return "bg-card border-card-border text-muted";
-}
 
 export function EstablishmentCard({ establishment, stateSlug }: { establishment: Establishment; stateSlug: string }) {
   const e = establishment;
@@ -23,9 +19,7 @@ export function EstablishmentCard({ establishment, stateSlug }: { establishment:
             {[e.address && titleCase(e.address), e.city && titleCase(e.city), e.stateCode].filter(Boolean).join(", ")} {e.zip ?? ""}
           </p>
         </div>
-        <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide ${resultBadgeClasses(e.latestResult)}`}>
-          {e.latestResult ?? "No result on file"}
-        </span>
+        <OfficialResultBadge result={e.latestResult}/>
       </div>
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
         {e.latestInspectionDate && <span>Latest inspection {formatInspectionDate(e.latestInspectionDate)}</span>}

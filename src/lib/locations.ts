@@ -1,3 +1,4 @@
+import { searchWithCityExpansion } from "../../backend/search-expansion.mjs";
 import { connection } from "next/server";
 import { cache } from "react";
 import { JURISDICTIONS } from "../../backend/jurisdictions.mjs";
@@ -124,3 +125,5 @@ export const getEstablishmentProfile = cache(
     | null
   > => withStore((store) => store.establishmentBySlug(stateCode, slug), null),
 );
+
+export const searchAcrossCities = cache((q:string,stateCode:string,city:string,offset=0,sort="date",jurisdictionId=""):Promise<{local:Establishment[];elsewhere:Establishment[];expansionFailed:boolean}> => withStore(store=>searchWithCityExpansion(store,{q,stateCode,city,offset,sort,jurisdictionId,limit:21}),{local:[],elsewhere:[],expansionFailed:false}));

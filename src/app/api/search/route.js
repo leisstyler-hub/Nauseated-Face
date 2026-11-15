@@ -1,3 +1,4 @@
+import {searchWithCityExpansion,citySuggestions} from '../../../../backend/search-expansion.mjs';
 import { openSiteStore, savedStorageEnabled } from '../../../../backend/production.mjs';
 import { JURISDICTIONS, stateSlug } from '../../../../backend/jurisdictions.mjs';
 
@@ -14,10 +15,12 @@ export async function GET(request) {
   if (!savedStorageEnabled()) return Response.json({ results: [] }, { headers: { 'Cache-Control': 'no-store' } });
   const store = openSiteStore();
   try {
-    const rows = await store.searchEstablishments({ q, stateCode: state ?? undefined, city: city ?? undefined, jurisdictionId: jurisdiction ?? undefined, limit });
+    const groups = await searchWithCityExpansion(store,{ q, stateCode: state ?? undefined, city: city ?? undefined, jurisdictionId: jurisdiction ?? undefined, limit });
+    const rows = citySuggestions(groups,limit);
     return Response.json({
+      expansionFailed:groups.expansionFailed,
       results: rows.map(r => ({
-        name: r.name, address: r.address, city: r.city, stateCode: r.stateCode,
+        matchScope:r.matchScope, name: r.name, address: r.address, city: r.city, stateCode: r.stateCode,
         stateSlug: STATE_SLUGS[r.stateCode] ?? stateSlug(r.stateCode), zip: r.zip, slug: r.slug,
         latestInspectionDate: r.latestInspectionDate, latestResult: r.latestResult,
         latestScore: r.latestScore, inspectionCount: r.inspectionCount, jurisdictionId: r.jurisdictionId,

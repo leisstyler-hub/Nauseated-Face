@@ -127,7 +127,7 @@ export class PostgresStore {
     const rows = await query(this.pool, 'UPDATE nf_preview.jurisdictions SET enabled=$2 WHERE id=$1 RETURNING id', [id, enabled === true]);
     return rows.length > 0;
   }
-  async searchEstablishments({ q = '', stateCode = '', city = '', jurisdictionId = '', sort = 'date', limit = 20, offset = 0 } = {}) {
+  async searchEstablishments({ q = '', stateCode = '', city = '', excludeCity = '', jurisdictionId = '', sort = 'date', limit = 20, offset = 0 } = {}) {
     if (!Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isInteger(offset) || offset < 0 || offset > 100000) throw new Error('Invalid search pagination');
     const tsquery = searchQuery(q);
     if (!tsquery) return [];
@@ -137,6 +137,7 @@ export class PostgresStore {
     const params = [tsquery];
     if (stateCode) { params.push(stateCode.toUpperCase()); clauses.push(`state_code=$${params.length}`); }
     if (city) { params.push(canonicalCityKey(stateCode,city)); clauses.push(`${cityKeySql('city')}=$${params.length}`); }
+    if (excludeCity && stateCode) { params.push(canonicalCityKey(stateCode,excludeCity)); clauses.push(`(${cityKeySql('city')} IS DISTINCT FROM $${params.length})`); }
     if (jurisdictionId) { params.push(jurisdictionId); clauses.push(`jurisdiction_id=$${params.length}`); }
     params.push(limit, offset);
     const rows = await query(this.pool, `SELECT * FROM nf_preview.establishments WHERE ${clauses.join(' AND ')} ORDER BY ${ordering} LIMIT $${params.length - 1} OFFSET $${params.length}`, params);

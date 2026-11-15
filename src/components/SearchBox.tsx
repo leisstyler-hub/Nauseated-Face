@@ -11,6 +11,7 @@ interface Suggestion {
   stateSlug: string;
   slug: string;
   latestResult: string | null;
+  matchScope?: string;
 }
 
 export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", state = "", city = "", jurisdiction = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; state?: string; city?: string; jurisdiction?: string }) {
@@ -95,7 +96,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
             aria-expanded={openList && suggestions.length > 0}
             aria-activedescendant={openList && active >= 0 ? `${listId}-${active}` : undefined}
             aria-controls={openList ? listId : undefined}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-muted sm:text-base"
+            className="min-w-0 w-full bg-transparent text-sm outline-none placeholder:text-muted sm:text-base"
           />
           <button type="submit" className="shrink-0 rounded-full bg-nausea px-4 py-1.5 text-sm font-bold text-background transition-opacity hover:opacity-90">
             Search
@@ -113,7 +114,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
               >
                 <span className="font-semibold">{s.name}</span>
                 <span className="text-right text-xs text-muted">
-                  {[s.city, s.stateCode].filter(Boolean).join(", ")}
+                  {[s.city, s.stateCode].filter(Boolean).join(", ")}{s.matchScope === "elsewhere" && <span className="mt-1 block text-nausea">Elsewhere in {s.stateCode}</span>}
                 </span>
               </Link>
             </li>

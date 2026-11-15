@@ -1,3 +1,4 @@
+import {OfficialResultBadge} from "./OfficialResultBadge";
 import { Face } from "@/components/Face";
 import { concernPercent } from "@/lib/ranking";
 import Link from "next/link";
@@ -5,13 +6,6 @@ import { inspectionPath } from "../../backend/inspection-detail.mjs";
 import { InspectionEvent } from "@/lib/kingcounty";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 
-function resultBadgeClasses(result: string | null) {
-  if (result === "Unsatisfactory")
-    return "bg-critical-soft text-critical border-critical/30";
-  if (result === "Satisfactory")
-    return "bg-nausea-soft text-nausea border-nausea/30";
-  return "bg-card border-card-border text-muted";
-}
 
 export function InspectionCard({ event }: { event: InspectionEvent }) {
   return (
@@ -25,13 +19,7 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
             {titleCase(event.address)}, {titleCase(event.city)}
           </p>
         </div>
-        <span
-          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide ${resultBadgeClasses(
-            event.result,
-          )}`}
-        >
-          {event.result ?? "No result on file"}
-        </span>
+        <OfficialResultBadge result={event.result}/>
       </div>
 
       <p className="text-nausea font-bold">
