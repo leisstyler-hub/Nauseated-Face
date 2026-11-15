@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Face } from "@/components/Face";
+import { DataNetwork } from "@/components/DataNetwork";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 import { SOURCE_DATASET_URL } from "@/lib/kingcounty";
@@ -8,7 +8,8 @@ export const metadata: Metadata = { title: "Data Methodology" };
 
 export default function MethodologyPage() {
   return (
-    <LegalPage title="Data Methodology" updated="November 14, 2026">
+    <LegalPage title="Data Methodology" updated="November 15, 2026">
+      <DataNetwork/>
       <h2>Source</h2>
       <p>
         King County inspection data comes directly from the{" "}
@@ -42,15 +43,10 @@ export default function MethodologyPage() {
         provides.
       </p>
 
-      <h2>Nauseated Face Index v1: 0–100% <Face /></h2>
-      <p>
-        The current point-based index equals the total recorded violation
-        points, rounded and capped between 0 and 100. Higher means more
-        violation points at that inspection. It is our editorial scale, not a
-        government rating, a percent unsafe, or a probability of illness.
-        Official scores remain separate. Red counts, result and closure are
-        shown alongside it; history-based weighting is still in development.
-      </p>
+      <h2>How to read inspection results</h2>
+      <p>Official inspection points and results are shown as published by the health department. King County violation points are not a percentage and are not capped at 100; lower points are better. Recorded violation-point totals are the sum of the published violation items and may differ from the official inspection score.</p>
+      <p>We do not currently publish a separate Nauseated Face rating. Health departments use different points, grades and result systems, so their numbers are not interchangeable. Dated findings and inspection history provide context, not a prediction of a restaurant’s current condition or a probability of illness.</p>
+      <h2>How records are selected</h2>
       <p>
         This Week&apos;s Worst selects the highest violation-point total among
         inspections dated in the past seven days for the selected city or region.

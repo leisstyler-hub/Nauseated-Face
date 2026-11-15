@@ -3,7 +3,6 @@ import type { InspectionEvent } from "@/lib/kingcounty";
 import Link from "next/link";
 import { inspectionPath } from "../../backend/inspection-detail.mjs";
 import { formatInspectionDate, titleCase } from "@/lib/format";
-import { concernPercent } from "@/lib/ranking";
 export function WeeklyHighlight({
   event,
   scope,
@@ -46,18 +45,13 @@ export function WeeklyHighlight({
                 {titleCase(event.address)}, {titleCase(event.city)}
               </p>
             </div>
-            <div className="face-rating">
-              <span aria-hidden><Face /></span>
-              <strong>{concernPercent(event)}%</strong>
-              <small>Nauseated Face Index v1</small>
-            </div>
           </div>
           <div className="score-grid">
             <div>
               <strong className="text-critical">
-                {event.totalViolationPoints}
+                {event.score ?? 'Not recorded'}
               </strong>
-              <span>Violation points</span>
+              <span>Official inspection points</span>
             </div>
             <div>
               <strong>{event.violationCount}</strong>
@@ -119,8 +113,7 @@ export function WeeklyHighlight({
             Explore the full inspection <span aria-hidden>→</span>
           </Link>
           <p className="scope">
-            An inspection record, not a current determination of safety. Index =
-            violation points capped at 100; not a probability of illness.{" "}
+            An inspection record, not a current determination of safety. Lower official violation points are better; these points are not a percentage.{" "}
             <Link href="/methodology">How it works</Link>.
           </p>
         </article>

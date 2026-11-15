@@ -1,7 +1,6 @@
 ﻿import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  concernPercent,
   badFirst,
   eligibleForWorst,
 } from "../src/lib/ranking.ts";
@@ -12,11 +11,12 @@ const event = (points, red = 0, closed = false) => ({
   result: "Satisfactory",
   inspectionDate: "2026-11-11",
 });
-test("percentage is explicitly bounded, with zero preserved", () => {
-  assert.equal(concernPercent(event(0)), 0);
-  assert.equal(concernPercent(event(37)), 37);
-  assert.equal(concernPercent(event(150)), 100);
+test("official point totals above 100 retain their value and ordering", () => {
+  const high=event(130),higher=event(150);
+  assert.deepEqual([event(0),high,event(100),higher].sort(badFirst).map(x=>x.totalViolationPoints),[150,130,100,0]);
+  assert.equal(eligibleForWorst(high),true);
 });
+
 test("one minor violation cannot qualify for worst", () => {
   assert.equal(eligibleForWorst(event(5)), false);
   assert.equal(eligibleForWorst(event(25, 1)), true);

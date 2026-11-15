@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getInspectionDetail, SOURCE_DATASET_URL } from "@/lib/kingcounty";
 import { formatInspectionDate, titleCase } from "@/lib/format";
-import { concernPercent } from "@/lib/ranking";
 
 export const metadata = { title: 'Full inspection' };
 
@@ -29,10 +28,10 @@ export default async function InspectionPage({ params, searchParams }: {
       <h1 className="mt-3 break-words text-3xl font-extrabold tracking-tight sm:text-5xl">{event.profileHref ? <Link href={event.profileHref} className="transition-colors hover:text-nausea underline decoration-nausea/40 underline-offset-4">{titleCase(event.name)}</Link> : titleCase(event.name)}</h1>
       <p className="mt-3 text-muted">{titleCase(event.address)}, {titleCase(event.city)} {event.zipCode}</p>
       <div className="my-6 flex flex-wrap items-center gap-3 text-sm"><time dateTime={event.inspectionDate}>{formatInspectionDate(event.inspectionDate)}</time><span className="text-muted">{event.inspectionType}</span><OfficialResultBadge result={event.result}/></div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[[`${concernPercent(event)}%`, 'Nauseated Face Index v1'], [String(event.score ?? 'Not recorded'), 'Official inspection score'], [String(event.violationCount), 'Recorded violations'], [String(event.redViolationCount), 'Red violations']].map(([value, label]) => <div key={label} className="rounded-xl border border-card-border bg-card p-4"><p className="text-2xl font-extrabold text-nausea">{value}</p><p className="mt-1 text-xs text-muted">{label}</p></div>)}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[[String(event.score ?? 'Not recorded'), 'Official inspection points'], [String(event.violationCount), 'Recorded violations'], [String(event.redViolationCount), 'Red violations']].map(([value, label]) => <div key={label} className="rounded-xl border border-card-border bg-card p-4"><p className="text-2xl font-extrabold text-nausea">{value}</p><p className="mt-1 text-xs text-muted">{label}</p></div>)}
       </div>
-      <p className="mt-5 text-sm text-muted">Closure recorded at this inspection: <strong className="text-foreground">{event.closedBusiness ? 'Yes' : 'No'}</strong>. This is a historical inspection, not a current safety determination. The index reflects violation points capped at 100; it is not a probability of illness. <Link href="/methodology" className="text-nausea underline">How the index works</Link>.</p>
+      <p className="mt-5 text-sm text-muted">Closure recorded at this inspection: <strong className="text-foreground">{event.closedBusiness ? 'Yes' : 'No'}</strong>. This is a historical inspection, not a current safety determination. Official points are shown as published, without a cap or percentage conversion. <Link href="/methodology" className="text-nausea underline">How to read these records</Link>.</p>
       <section className="mt-10" aria-labelledby="violations-heading">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-2"><h2 id="violations-heading" className="text-2xl font-extrabold">Every recorded violation</h2><span className="text-sm text-muted">{event.totalViolationPoints} total violation points</span></div>
         {event.violations.length ? <ol className="space-y-3">{event.violations.map((v, i) => <li key={i} className="rounded-xl border border-card-border bg-card p-5"><div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs font-bold"><span className={v.type === 'RED' ? 'text-critical' : 'text-muted'}>{i + 1}. {v.type ?? 'UNCLASSIFIED'}</span><span>{v.points} points</span></div><p className="break-words text-sm leading-relaxed">{v.description}</p></li>)}</ol> : <p className="rounded-xl border border-card-border bg-card p-5 text-muted">No violation descriptions are recorded for this inspection.</p>}

@@ -1,6 +1,4 @@
 import {OfficialResultBadge} from "./OfficialResultBadge";
-import { Face } from "@/components/Face";
-import { concernPercent } from "@/lib/ranking";
 import Link from "next/link";
 import { inspectionPath } from "../../backend/inspection-detail.mjs";
 import { InspectionEvent } from "@/lib/kingcounty";
@@ -22,16 +20,10 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
         <OfficialResultBadge result={event.result}/>
       </div>
 
-      <p className="text-nausea font-bold">
-        <Face /> {concernPercent(event)}%{" "}
-        <span className="text-xs font-normal text-muted">
-          Nauseated Face Index v1
-        </span>
-      </p>
+      <p className="font-bold text-foreground">{event.score===null?'Official inspection points not recorded':`${event.score} official inspection points`}</p>
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
         <span>{formatInspectionDate(event.inspectionDate)}</span>
         <span>{event.inspectionType}</span>
-        {event.score !== null && <span>Official score: {event.score}</span>}
         <span>
           {event.violationCount} violation
           {event.violationCount === 1 ? "" : "s"}
