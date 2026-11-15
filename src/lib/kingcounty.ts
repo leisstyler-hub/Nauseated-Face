@@ -159,6 +159,7 @@ export const getRecentInspectionEvents = cache(() =>
 export const getInspectionFeed = cache(async () => {
   const { getHomeArea } = await import("./home-area");
   const area = await getHomeArea();
+  if (!area.selected) return {events:[] as InspectionEvent[],weeklyEvents:[] as InspectionEvent[],area,coverage:null as {inspections:number;businesses:number;first:string|null;last:string|null}|null,saved:false,observedAt:null as string|null,stale:false,importError:false};
   if (!savedStorageEnabled()) {
     return { events: (await getRecentInspectionEvents()).filter(e => !area.city || e.city.trim().toLowerCase() === area.city.toLowerCase()), weeklyEvents: await getRecentInspectionEvents(), area, coverage: null as {inspections:number;businesses:number;first:string|null;last:string|null}|null, saved: false, observedAt: null as string | null, stale: false, importError: false };
   }

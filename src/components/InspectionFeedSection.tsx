@@ -8,11 +8,13 @@ import { formatInspectionDate } from "@/lib/format";
 import { formatRefreshedAt } from "@/lib/format";
 import { WeeklyHighlight } from "./WeeklyHighlight";
 import { LatestActivity } from "./LatestActivity";
+import { LocationPrompt } from "./LocationPrompt";
 
 export async function InspectionFeedSection() {
   await connection();
   const refreshedAt = new Date();
   const area = await getHomeArea();
+  if (!area.selected) return <LocationPrompt/>;
   if (area.jurisdictionId !== "wa-king") {
     const records = area.covered ? await getCityEstablishments(area.stateCode,area.city,12) : [];
     return <section id="latest" className="mx-auto max-w-6xl px-4 py-14 sm:px-6"><p className="eyebrow text-nausea">{area.label}</p><h2 className="mt-3 text-3xl font-extrabold">Latest inspection records</h2><p className="my-5 text-sm text-muted">{area.description} Official results are shown as published; King County rankings do not apply here.</p>{records.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{records.map(e=><EstablishmentCard key={e.id} establishment={e} stateSlug={area.stateSlug}/>)}</div> : <p className="empty-state">No published records are available for this location yet. Choose another location.</p>}</section>;

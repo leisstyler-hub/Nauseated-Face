@@ -26,8 +26,12 @@ test('area preferences resolve safely and region does not invent neighboring cou
  assert.equal(resolveHomeArea(states,'washington/seattle').city,'Seattle');
  assert.equal(resolveHomeArea(states,'washington/greater-seattle').city,'');
  assert.equal(resolveHomeArea(states,'washington/greater-seattle').covered,true);
- assert.match(resolveHomeArea(states).description,/Does not include Pierce or Snohomish/);
- assert.equal(resolveHomeArea(states,'../../bad').key,'washington/greater-seattle');
+ assert.match(resolveHomeArea(states,'washington/greater-seattle').description,/Does not include Pierce or Snohomish/);
+ assert.equal(resolveHomeArea(states,'../../bad').key,'');
+ assert.equal(resolveHomeArea(states).selected,false);
+ assert.equal(resolveHomeArea(states).jurisdictionId,'');
+ assert.equal(resolveHomeArea(states,'washington/seattle').selected,true);
+ assert.equal(resolveHomeArea(states,'washington/greater-seattle').selected,true);
  assert.equal(resolveHomeArea([]).covered,false);
  const aliasStates=[{code:'WA',slug:'washington',cities:[{name:'SeaTac',slug:'seatac',jurisdictionId:'wa-king',covered:true}]}];
  assert.equal(resolveHomeArea(aliasStates,'washington/sea-tac').key,'washington/seatac');

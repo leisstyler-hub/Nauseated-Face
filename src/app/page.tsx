@@ -9,6 +9,7 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { NewsletterTeaser } from "@/components/NewsletterTeaser";
 import { AdSlot } from "@/components/AdSlot";
 import { RecordLoader } from "@/components/RecordLoader";
+import { LocationPrompt } from "@/components/LocationPrompt";
 
 export default async function Home() {
   const area = await getHomeArea();
@@ -30,9 +31,9 @@ export default async function Home() {
         <AdSlot kind="top-leaderboard" />
       </div>
 
-      <Suspense key={`feed-${area.key}`} fallback={<FeedSkeleton />}>
+      {area.selected ? <Suspense key={`feed-${area.key}`} fallback={<FeedSkeleton />}>
         <InspectionFeedSection />
-      </Suspense>
+      </Suspense> : <LocationPrompt/>}
 
       <CategoryGrid />
       <NewsletterTeaser />

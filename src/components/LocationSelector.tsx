@@ -34,7 +34,7 @@ function rememberArea(value: string) {
   document.cookie = `nf-area=${value}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
-export function LocationSelector({ states, initialArea = "washington/greater-seattle", regionInspectionCount = 0 }: { states: SelectorState[]; initialArea?: string; regionInspectionCount?: number }) {
+export function LocationSelector({ states, initialArea = "", regionInspectionCount = 0 }: { states: SelectorState[]; initialArea?: string; regionInspectionCount?: number }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [locating, setLocating] = useState(false);
@@ -46,6 +46,12 @@ export function LocationSelector({ states, initialArea = "washington/greater-sea
   const listId = useId();
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener('nf-open-location', show);
+    return () => window.removeEventListener('nf-open-location', show);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -71,7 +77,7 @@ export function LocationSelector({ states, initialArea = "washington/greater-sea
   let savedHref = "";
   try { savedHref = JSON.parse(saved ?? "null")?.href ?? ""; } catch { /* Ignore invalid stored values. */ }
   const profileState = pathname.startsWith("/restaurants/") ? states.find(state => state.slug === pathname.split("/")[2]) : undefined;
-  const current = choices.find(c => c.href === pathname) ?? (profileState ? { label: profileState.name, href: `/${profileState.slug}` } : undefined) ?? choices.find(c => c.href === "/" + initialArea) ?? choices.find(c => c.href === savedHref) ?? { label: "Greater Seattle", href: "/washington/greater-seattle" };
+  const current = choices.find(c => c.href === pathname) ?? (profileState ? { label: profileState.name, href: `/${profileState.slug}` } : undefined) ?? choices.find(c => c.href === "/" + initialArea) ?? (initialArea ? choices.find(c => c.href === savedHref) : undefined) ?? { label: "Choose a city", href: "" };
 
   const pick = (state: SelectorState, city: SelectorCity) => {
     const next = { label: `${city.name}, ${state.code}`, href: `/${state.slug}/${city.slug}` };

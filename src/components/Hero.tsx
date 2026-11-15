@@ -2,6 +2,7 @@ import { getHomeArea } from "@/lib/home-area";
 import Link from "next/link";
 import { Face } from "@/components/Face";
 import { SearchBox } from "@/components/SearchBox";
+import { ChooseCityButton } from "@/components/ChooseCityButton";
 export async function Hero() {
   const area = await getHomeArea();
   return (
@@ -33,9 +34,9 @@ export async function Hero() {
           <SearchBox state={area.stateCode} city={area.city} jurisdiction={area.jurisdictionId} />
         </div>
         <div className="hero-actions">
-          <a href="#worst" className="primary-button">
+          {area.selected ? <a href="#worst" className="primary-button">
             Meet this week&apos;s worst <span aria-hidden>↗</span>
-          </a>
+          </a> : <ChooseCityButton/>}
           <Link href="/methodology" className="secondary-button">
             The facts behind the face
           </Link>
