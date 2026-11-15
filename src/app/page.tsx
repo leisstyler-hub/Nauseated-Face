@@ -22,7 +22,7 @@ export default function Home() {
       >
         <TickerSection />
       </Suspense>
-      <Hero />
+      <Suspense fallback={<div className="hero"><RecordLoader /></div>}><Hero /></Suspense>
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
         <AdSlot kind="top-leaderboard" />
       </div>

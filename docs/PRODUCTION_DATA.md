@@ -31,3 +31,9 @@ schema. Export source/detail records to retained release evidence after seed.
 
 Advertising integration and WA/CA/TN expansion are subsequent work; no ad
 network, revenue, paid capacity upgrade, or broader coverage is implied here.
+
+## Greater Seattle full-source release, November 15, 2026
+
+King County refresh now requests a complete stable-revision dataset snapshot, with 10,000-row source pages and batched database writes. Source rows, revisions and changes remain atomic and retain provenance. The first verified snapshot contains 111,611 source rows, 75,226 inspection events and 12,359 businesses; Seattle native city records include 34,477 inspections. Actual production evidence is recorded separately. Other enabled jurisdictions retain bounded collection.
+
+Greater Seattle means King County coverage, excluding Pierce and Snohomish County. Homepage location filters every saved inspection from the past seven days before choosing the weekly highlight. The four worst and eight best cards use each business's latest inspection in that window. Full saved histories remain searchable and on profiles. The chosen area is stored in the nf-area preference cookie for one year. Full source capture means all records published by that source at the verified revision, not every inspection ever performed or every operating restaurant.

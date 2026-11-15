@@ -9,7 +9,7 @@ const categories = [
   ],
   [
     "Red Violation Report",
-    "Critical violations recorded by King County inspectors.",
+    "Critical violations recorded by the responsible health authority.",
   ],
   [
     "Repeat Offender",

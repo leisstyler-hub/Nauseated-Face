@@ -7,13 +7,14 @@ export async function GET(request) {
   const params = new URL(request.url).searchParams;
   const q = (params.get('q') ?? '').slice(0, 120);
   const state = params.get('state')?.slice(0, 2);
+  const jurisdiction = params.get('jurisdiction')?.slice(0,80);
   const city = params.get('city')?.slice(0, 80);
   const limit = Math.min(25, Math.max(1, Math.floor(Number(params.get('limit'))) || 10));
   if (q.trim().length < 2) return Response.json({ results: [] }, { headers: { 'Cache-Control': 'no-store' } });
   if (!savedStorageEnabled()) return Response.json({ results: [] }, { headers: { 'Cache-Control': 'no-store' } });
   const store = openSiteStore();
   try {
-    const rows = await store.searchEstablishments({ q, stateCode: state ?? undefined, city: city ?? undefined, limit });
+    const rows = await store.searchEstablishments({ q, stateCode: state ?? undefined, city: city ?? undefined, jurisdictionId: jurisdiction ?? undefined, limit });
     return Response.json({
       results: rows.map(r => ({
         name: r.name, address: r.address, city: r.city, stateCode: r.stateCode,

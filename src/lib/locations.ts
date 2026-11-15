@@ -121,8 +121,8 @@ async function withStore<T>(action: (store: Awaited<ReturnType<typeof openSiteSt
 }
 
 export const searchEstablishments = cache(
-  (q: string, state = "", city = "", offset = 0, sort = "date"): Promise<Establishment[]> =>
-    withStore((store) => store.searchEstablishments({ q, stateCode: state, city, limit: 21, offset, sort }), []),
+  (q: string, state = "", city = "", offset = 0, sort = "date", jurisdictionId = ""): Promise<Establishment[]> =>
+    withStore((store) => store.searchEstablishments({ q, stateCode: state, city, limit: 21, offset, sort, jurisdictionId }), []),
 );
 
 export const getCityEstablishments = cache(

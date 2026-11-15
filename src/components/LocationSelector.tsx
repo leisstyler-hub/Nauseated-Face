@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { nearbyCities } from "@/lib/nearby";
 
 export interface SelectorCity {
@@ -29,7 +29,11 @@ const subscribe = (callback: () => void) => {
 };
 const getSnapshot = () => { try { return window.localStorage.getItem(STORAGE_KEY); } catch { return null; } };
 
-export function LocationSelector({ states }: { states: SelectorState[] }) {
+function rememberArea(value: string) {
+  document.cookie = `nf-area=${value}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+}
+
+export function LocationSelector({ states, initialArea = "washington/greater-seattle" }: { states: SelectorState[]; initialArea?: string }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [locating, setLocating] = useState(false);
@@ -40,6 +44,7 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
@@ -61,11 +66,11 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
   }, [open]);
 
   const choices = states.flatMap(state => state.cities.map(city => ({ label: `${city.name}, ${state.code}`, href: `/${state.slug}/${city.slug}` })));
-  choices.push({ label: "All available locations", href: "/locations" });
+  choices.push({ label: "Greater Seattle", href: "/washington/greater-seattle" });
   let savedHref = "";
   try { savedHref = JSON.parse(saved ?? "null")?.href ?? ""; } catch { /* Ignore invalid stored values. */ }
   const profileState = pathname.startsWith("/restaurants/") ? states.find(state => state.slug === pathname.split("/")[2]) : undefined;
-  const current = choices.find(c => c.href === pathname) ?? (profileState ? { label: profileState.name, href: `/${profileState.slug}` } : undefined) ?? choices.find(c => c.href === savedHref) ?? { label: "Seattle, WA", href: "/washington/seattle" };
+  const current = choices.find(c => c.href === pathname) ?? (profileState ? { label: profileState.name, href: `/${profileState.slug}` } : undefined) ?? choices.find(c => c.href === "/" + initialArea) ?? choices.find(c => c.href === savedHref) ?? { label: "Greater Seattle", href: "/washington/greater-seattle" };
 
   const pick = (state: SelectorState, city: SelectorCity) => {
     const next = { label: `${city.name}, ${state.code}`, href: `/${state.slug}/${city.slug}` };
@@ -74,7 +79,9 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
     } catch {
       // Private browsing: selection still navigates, it just isn't remembered.
     }
+    rememberArea(`${state.slug}/${city.slug}`);
     window.dispatchEvent(new Event("nf-location-change"));
+    router.refresh();
     setOpen(false);
   };
 
@@ -137,7 +144,7 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
           </button>
           <p className="mb-3 text-xs text-muted">Optional. Your browser asks permission. Coordinates stay in your browser; only your chosen city is remembered.</p>
           <p role="status" className="mb-2 text-xs text-muted">{locationMessage}</p>
-          {nearby.map(city => <Link key={`${city.state.code}-${city.slug}`} href={`/${city.state.slug}/${city.slug}`} onClick={() => pick(city.state, city)} className="mb-2 block rounded-lg border border-nausea/30 px-3 py-2 text-sm text-nausea">
+          {nearby.map(city => <Link key={`${city.state.code}-${city.slug}`} href="/" prefetch={false} onClick={() => pick(city.state, city)} className="mb-2 block rounded-lg border border-nausea/30 px-3 py-2 text-sm text-nausea">
             {city.name}, {city.state.code} <span className="block text-xs text-muted">{city.statusLabel} · about {Math.round(city.miles)} miles to the city area</span>
           </Link>)}
           <label className="sr-only" htmlFor={`${listId}-filter`}>
@@ -151,6 +158,7 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
             autoFocus
             className="mb-3 w-full rounded-lg border border-card-border bg-card px-3 py-2 text-sm outline-none focus:border-nausea"
           />
+          {(!needle || 'greater seattle king county'.includes(needle)) && <Link href="/" prefetch={false} onClick={() => pick({code:'WA',name:'Washington',slug:'washington',cities:[]},{name:'Greater Seattle',slug:'greater-seattle',statusLabel:'King County cities',covered:true,latitude:null,longitude:null})} className="mb-3 block rounded-lg border border-nausea/40 bg-nausea-soft px-3 py-3 text-sm font-bold text-nausea">Greater Seattle<span className="mt-1 block text-xs font-normal text-muted">King County cities together</span></Link>}
           {filtered.map((state) => (
             <div key={state.code} className="mb-3">
               <Link
@@ -163,7 +171,7 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
                 {state.cities.map((city) => (
                   <li key={city.slug}>
                     <Link
-                      href={`/${state.slug}/${city.slug}`}
+                      href="/" prefetch={false}
                       onClick={() => pick(state, city)}
                       className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-card"
                     >

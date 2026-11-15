@@ -1,3 +1,4 @@
+import { getHomeArea } from "@/lib/home-area";
 import { Face } from "@/components/Face";
 import Link from "next/link";
 import { LocationSelector, type SelectorState } from "@/components/LocationSelector";
@@ -11,6 +12,7 @@ const NAV_LINKS = [
 ];
 
 export async function SiteHeader() {
+  const area = await getHomeArea();
   const states: SelectorState[] = (await getStates()).map((state) => ({
     code: state.code,
     name: state.name,
@@ -54,7 +56,7 @@ export async function SiteHeader() {
           >
             <span aria-hidden>🔍</span>
           </Link>
-          <LocationSelector states={states} />
+          <LocationSelector states={states} initialArea={area.key} />
         </div>
       </div>
     </header>

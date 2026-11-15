@@ -157,13 +157,19 @@ export const getRecentInspectionEvents = cache(() =>
 );
 
 export const getInspectionFeed = cache(async () => {
+  const { getHomeArea } = await import("./home-area");
+  const area = await getHomeArea();
   if (!savedStorageEnabled()) {
-    return { events: await getRecentInspectionEvents(), saved: false, observedAt: null as string | null, stale: false, importError: false };
+    return { events: (await getRecentInspectionEvents()).filter(e => !area.city || e.city.trim().toLowerCase() === area.city.toLowerCase()), weeklyEvents: await getRecentInspectionEvents(), area, coverage: null as {inspections:number;businesses:number;first:string|null;last:string|null}|null, saved: false, observedAt: null as string | null, stale: false, importError: false };
   }
   const store = openSiteStore();
   try {
-    const feed = await loadSavedFeed(store);
-    return { events: groupIntoEvents(feed.rows as ViolationRow[]), saved: true, observedAt: feed.oldestObservation, stale: feed.stale, importError: Boolean(feed.freshness.error) };
+    const [feed, coverage] = await Promise.all([loadSavedFeed(store,100,area.city,true),store.feedCoverage(area.city)]);
+    if (!area.covered || area.jurisdictionId !== 'wa-king') feed.rows = [];
+    const weeklyEvents = groupIntoEvents(feed.rows as ViolationRow[]);
+    const seen = new Set<string>();
+    const events = weeklyEvents.filter(event => { if(seen.has(event.businessId)) return false; seen.add(event.businessId); return true; });
+    return { events, weeklyEvents, area, coverage, saved: true, observedAt: feed.oldestObservation, stale: feed.stale, importError: Boolean(feed.freshness.error) };
   } finally { await store.close(); }
 });
 

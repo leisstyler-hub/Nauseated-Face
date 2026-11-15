@@ -17,6 +17,15 @@ const query = async (client, sql, params = []) => (await client.query(sql, param
 const establishmentRow = r => ({ id: r.id, jurisdictionId: r.jurisdiction_id, officialId: r.official_id, name: r.name, address: r.address, city: r.city, stateCode: r.state_code, zip: r.zip, latitude: r.latitude, longitude: r.longitude, slug: r.slug, latestInspectionDate: r.latest_inspection_date, latestResult: r.latest_result, latestScore: r.latest_score, inspectionCount: Number(r.inspection_count) });
 const SEARCH_VECTOR = "to_tsvector('simple', name || ' ' || coalesce(address,'') || ' ' || coalesce(city,'') || ' ' || coalesce(zip,'') || ' ' || state_code || ' ' || search_text)";
 
+// Bound parameter counts and network round trips for complete source imports.
+async function insertBatch(client, table, columns, rows, suffix = '') {
+  for (let offset = 0; offset < rows.length; offset += 500) {
+    const batch = rows.slice(offset, offset + 500);
+    const values = batch.map((row, i) => '(' + row.map((_, j) => '$' + (i * columns.length + j + 1)).join(',') + ')').join(',');
+    await client.query(`INSERT INTO nf_preview.${table}(${columns.join(',')}) VALUES ${values} ${suffix}`, batch.flat());
+  }
+}
+
 export function searchQuery(text) {
   const terms = String(text ?? '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean).slice(0, 8);
   return terms.length ? terms.map(term => `${term}:*`).join(' & ') : null;
@@ -80,6 +89,25 @@ export class PostgresStore {
     const rows = await query(this.pool, `SELECT i.*, f.finished_at AS observed_at FROM nf_preview.inspections i JOIN nf_preview.refresh_runs f ON f.id=i.last_run WHERE ($3::text IS NULL OR business_id=$3) AND ($4::text IS NULL OR i.jurisdiction_id=$4) ORDER BY inspection_date DESC,i.id LIMIT $1 OFFSET $2`, [limit, offset, businessId ?? null, jurisdictionId ?? null]);
     return rows.map(r => ({ id: r.id, businessId: r.business_id, serial: r.serial, inspectionDate: r.inspection_date, fields: JSON.parse(r.fields_json), rowCount: Number(r.row_count), observedAt: r.observed_at, stale: stale(r.observed_at), jurisdictionId: r.jurisdiction_id, establishmentId: r.establishment_id, sourceUrl: sourceUrl(r.business_id, r.serial, r.jurisdiction_id) }));
   }
+  async feedCoverage(city = '') {
+    const [row] = await query(this.pool, `SELECT count(*)::int AS inspections,count(DISTINCT i.business_id)::int AS businesses,min(i.inspection_date) AS first,max(i.inspection_date) AS last
+      FROM nf_preview.inspections i JOIN nf_preview.establishments e ON e.id=i.establishment_id
+      WHERE i.jurisdiction_id='wa-king' AND i.jurisdiction_id IN (SELECT id FROM nf_preview.jurisdictions WHERE enabled AND coverage_status IN ('available','limited')) AND ($1::text='' OR lower(trim(e.city))=lower($1))`,[city]);
+    return row;
+  }
+  async homeFeed(limit = 100, jurisdictionId = 'wa-king', city = '', since = null) {
+    // Filter before limiting. Weekly rankings include every event; default lists use newest per business.
+    const rows = await query(this.pool, `SELECT latest.*, f.finished_at AS observed_at FROM (
+      SELECT ${since ? '' : 'DISTINCT ON (i.business_id)'} i.* FROM nf_preview.inspections i
+      JOIN nf_preview.establishments e ON e.id=i.establishment_id
+      WHERE i.jurisdiction_id=$2 AND i.jurisdiction_id IN (SELECT id FROM nf_preview.jurisdictions WHERE enabled AND coverage_status IN ('available','limited'))
+        AND ($3::text='' OR lower(trim(e.city))=lower($3))
+        AND ($4::text IS NULL OR i.inspection_date >= $4)
+      ORDER BY i.business_id,i.inspection_date DESC,i.id
+    ) latest JOIN nf_preview.refresh_runs f ON f.id=latest.last_run
+    ORDER BY latest.inspection_date DESC,latest.id LIMIT CASE WHEN $4::text IS NULL THEN $1::int ELSE NULL END`, [limit,jurisdictionId,city,since]);
+    return rows.map(r => ({id:r.id,businessId:r.business_id,serial:r.serial,inspectionDate:r.inspection_date,fields:JSON.parse(r.fields_json),rowCount:Number(r.row_count),observedAt:r.observed_at,jurisdictionId:r.jurisdiction_id}));
+  }
   async catalog() {
     const rows = await query(this.pool, `SELECT j.*, (SELECT count(*) FROM nf_preview.establishments e WHERE e.jurisdiction_id=j.id) AS establishment_count FROM nf_preview.jurisdictions j ORDER BY j.state_name, j.name`);
     return rows.map(r => ({ id: r.id, stateCode: r.state_code, stateName: r.state_name, name: r.name, healthAuthority: r.health_authority, sourceUrl: r.source_url, scoring: JSON.parse(r.scoring_json), coverageStatus: r.coverage_status, enabled: r.enabled, refreshFrequency: r.refresh_frequency, establishmentCount: Number(r.establishment_count) }));
@@ -91,7 +119,7 @@ export class PostgresStore {
     const rows = await query(this.pool, 'UPDATE nf_preview.jurisdictions SET enabled=$2 WHERE id=$1 RETURNING id', [id, enabled === true]);
     return rows.length > 0;
   }
-  async searchEstablishments({ q = '', stateCode = '', city = '', sort = 'date', limit = 20, offset = 0 } = {}) {
+  async searchEstablishments({ q = '', stateCode = '', city = '', jurisdictionId = '', sort = 'date', limit = 20, offset = 0 } = {}) {
     if (!Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isInteger(offset) || offset < 0 || offset > 100000) throw new Error('Invalid search pagination');
     const tsquery = searchQuery(q);
     if (!tsquery) return [];
@@ -101,6 +129,7 @@ export class PostgresStore {
     const params = [tsquery];
     if (stateCode) { params.push(stateCode.toUpperCase()); clauses.push(`state_code=$${params.length}`); }
     if (city) { params.push(city.toLowerCase()); clauses.push(`lower(city)=$${params.length}`); }
+    if (jurisdictionId) { params.push(jurisdictionId); clauses.push(`jurisdiction_id=$${params.length}`); }
     params.push(limit, offset);
     const rows = await query(this.pool, `SELECT * FROM nf_preview.establishments WHERE ${clauses.join(' AND ')} ORDER BY ${ordering} LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
     return rows.map(establishmentRow);
@@ -181,10 +210,11 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
       // Imports only ever add/remove rows inside their own jurisdiction.
       const inScope = old => old.jurisdiction_id === jurisdictionId && (scope.type === 'all' || (scope.type === 'business' && JSON.parse(old.raw_json).business_id === scope.businessId) || snapshot.events.has(old.event_id));
       let changed = 0;
+      const changes = [], removed = [];
       for (const old of all) {
         if (old.active && inScope(old) && !seen.has(old.source_id)) {
-          await tx.query('UPDATE nf_preview.source_rows SET active=false,last_run=$1 WHERE source_id=$2', [run.id, old.source_id]);
-          await tx.query("INSERT INTO nf_preview.row_changes(run_id,source_id,action,old_hash) VALUES($1,$2,'removed',$3)", [run.id, old.source_id, old.hash]);
+          removed.push(old.source_id);
+          changes.push([run.id,old.source_id,'removed',old.hash,null]);
           changed++;
         }
       }
@@ -192,31 +222,36 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
         const old = oldRows.get(r.sourceId);
         if (old && old.event_id !== r.id && !inScope(old)) throw new Error('Source row moved outside import scope; run full import to reconcile');
         if (!old || old.hash !== r.hash || !old.active) {
-          await tx.query('INSERT INTO nf_preview.row_changes(run_id,source_id,action,old_hash,new_hash) VALUES($1,$2,$3,$4,$5)', [run.id, r.sourceId, !old ? 'added' : !old.active ? 'restored' : 'changed', old?.hash ?? null, r.hash]);
+          changes.push([run.id, r.sourceId, !old ? 'added' : !old.active ? 'restored' : 'changed', old?.hash ?? null, r.hash]);
           changed++;
         }
-        await tx.query('INSERT INTO nf_preview.row_revisions VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING', [r.sourceId, r.hash, r.id, r.raw, run.id]);
-        await tx.query('INSERT INTO nf_preview.source_rows(source_id,event_id,hash,raw_json,active,last_run,jurisdiction_id) VALUES($1,$2,$3,$4,true,$5,$6) ON CONFLICT(source_id) DO UPDATE SET event_id=excluded.event_id,hash=excluded.hash,raw_json=excluded.raw_json,active=true,last_run=excluded.last_run,jurisdiction_id=excluded.jurisdiction_id', [r.sourceId, r.id, r.hash, r.raw, run.id, jurisdictionId]);
       }
+      if (removed.length) await tx.query('UPDATE nf_preview.source_rows SET active=false,last_run=$1 WHERE source_id=ANY($2::text[])',[run.id,removed]);
+      await insertBatch(tx,'row_changes',['run_id','source_id','action','old_hash','new_hash'],changes);
+      await insertBatch(tx,'row_revisions',['source_id','hash','event_id','raw_json','first_run'],snapshot.rows.map(r=>[r.sourceId,r.hash,r.id,r.raw,run.id]),'ON CONFLICT DO NOTHING');
+      await insertBatch(tx,'source_rows',['source_id','event_id','hash','raw_json','active','last_run','jurisdiction_id'],snapshot.rows.map(r=>[r.sourceId,r.id,r.hash,r.raw,true,run.id,jurisdictionId]),'ON CONFLICT(source_id) DO UPDATE SET event_id=excluded.event_id,hash=excluded.hash,raw_json=excluded.raw_json,active=true,last_run=excluded.last_run,jurisdiction_id=excluded.jurisdiction_id');
       const existingSlugs = new Map((await query(tx, 'SELECT id,slug FROM nf_preview.establishments WHERE jurisdiction_id=$1', [jurisdictionId])).map(e => [e.id, e.slug]));
       await tx.query('DELETE FROM nf_preview.violations WHERE source_id IN (SELECT source_id FROM nf_preview.source_rows WHERE jurisdiction_id=$1)', [jurisdictionId]);
       await tx.query('DELETE FROM nf_preview.inspections WHERE jurisdiction_id=$1', [jurisdictionId]);
       await tx.query('DELETE FROM nf_preview.establishments WHERE jurisdiction_id=$1', [jurisdictionId]);
-      const grouped = new Map();
+      const grouped = new Map(), violations = [];
       for (const r of await query(tx, 'SELECT * FROM nf_preview.source_rows WHERE active AND jurisdiction_id=$1 ORDER BY source_id', [jurisdictionId])) {
         const raw = JSON.parse(r.raw_json);
         const g = grouped.get(r.event_id) ?? { row: raw, count: 0, run: Number(r.last_run), jurisdiction: r.jurisdiction_id };
         if (fields(g.row) !== fields(raw)) throw new Error('Conflicting inspection fields in retained snapshot');
         g.count++; g.run = Math.max(g.run, Number(r.last_run)); grouped.set(r.event_id, g);
-        if (raw.violation_description || raw.violation_type) await tx.query('INSERT INTO nf_preview.violations VALUES($1,$2,$3,$4,$5)', [r.source_id, r.event_id, raw.violation_type ?? null, raw.violation_description ?? null, raw.violation_points ?? null]);
+        if (raw.violation_description || raw.violation_type) violations.push([r.source_id, r.event_id, raw.violation_type ?? null, raw.violation_description ?? null, raw.violation_points ?? null]);
       }
-      const establishments = new Map();
+      const establishments = new Map(), searchNames = new Map();
       for (const [, g] of grouped) {
         const adapter = ADAPTERS[g.jurisdiction];
         if (!adapter) throw new Error(`Saved rows reference jurisdiction ${g.jurisdiction} without an adapter`);
         const details = adapter.establishment(g.row);
         const summary = adapter.inspectionSummary(g.row);
         const id = establishmentId(g.jurisdiction, details.officialId);
+        const names = searchNames.get(id) ?? new Set();
+        for (const name of [g.row.name,g.row.alternate_name]) if(name) names.add(name);
+        searchNames.set(id,names);
         const prev = establishments.get(id);
         if (!prev) establishments.set(id, { ...details, id, jurisdiction: g.jurisdiction, stateCode: adapter.stateCode, count: 1, latest: summary, run: g.run });
         else {
@@ -224,8 +259,9 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
           if ((summary.date ?? '') > (prev.latest.date ?? '')) { Object.assign(prev, details); prev.latest = summary; }
         }
       }
-      for (const [id, g] of grouped) await tx.query('INSERT INTO nf_preview.inspections(id,business_id,serial,inspection_date,fields_json,row_count,last_run,jurisdiction_id,establishment_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)', [id, g.row.business_id, g.row.inspection_serial_num, g.row.inspection_date, fields(g.row), g.count, g.run, g.jurisdiction, establishmentId(g.jurisdiction, ADAPTERS[g.jurisdiction].establishment(g.row).officialId)]);
-      for (const e of establishments.values()) await tx.query('INSERT INTO nf_preview.establishments(id,jurisdiction_id,official_id,name,address,city,state_code,zip,latitude,longitude,slug,latest_inspection_date,latest_result,latest_score,inspection_count,last_run,search_text) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)', [e.id, e.jurisdiction, e.officialId, e.name, e.address, e.city, e.stateCode, e.zip, e.latitude, e.longitude, existingSlugs.get(e.id) ?? `${citySlug(e.name).slice(0, 100) || 'establishment'}-${e.id}`, e.latest.date, e.latest.result, e.latest.score, e.count, e.run, [jurisdictionById(e.jurisdiction)?.stateName, jurisdictionById(e.jurisdiction)?.healthAuthority, ...[...grouped.values()].filter(g => g.jurisdiction === e.jurisdiction && g.row.business_id === e.officialId).flatMap(g => [g.row.name, g.row.alternate_name])].filter(Boolean).join(' ')]);
+      await insertBatch(tx,'violations',['source_id','event_id','type','description','points'],violations);
+      await insertBatch(tx,'inspections',['id','business_id','serial','inspection_date','fields_json','row_count','last_run','jurisdiction_id','establishment_id'],[...grouped].map(([id,g])=>[id,g.row.business_id,g.row.inspection_serial_num,g.row.inspection_date,fields(g.row),g.count,g.run,g.jurisdiction,establishmentId(g.jurisdiction,ADAPTERS[g.jurisdiction].establishment(g.row).officialId)]));
+      await insertBatch(tx,'establishments',['id','jurisdiction_id','official_id','name','address','city','state_code','zip','latitude','longitude','slug','latest_inspection_date','latest_result','latest_score','inspection_count','last_run','search_text'],[...establishments.values()].map(e=>[e.id,e.jurisdiction,e.officialId,e.name,e.address,e.city,e.stateCode,e.zip,e.latitude,e.longitude,existingSlugs.get(e.id) ?? `${citySlug(e.name).slice(0,100)||'establishment'}-${e.id}`,e.latest.date,e.latest.result,e.latest.score,e.count,e.run,[jurisdictionById(e.jurisdiction)?.stateName,jurisdictionById(e.jurisdiction)?.healthAuthority,...searchNames.get(e.id)].filter(Boolean).join(' ')]));
       await tx.query('UPDATE nf_preview.jurisdictions SET last_synced_at=$1 WHERE id=$2', [now(), jurisdictionId]);
       await tx.query("UPDATE nf_preview.refresh_runs SET finished_at=$1,status='success',source_revision=$2,row_count=$3,changed_count=$4,request_urls=$5 WHERE id=$6", [now(), snapshot.revision, snapshot.rows.length, changed, JSON.stringify(snapshot.urls), run.id]);
       return { runId: Number(run.id), rowCount: snapshot.rows.length, changedCount: changed, scope, revision: snapshot.revision };

@@ -13,7 +13,7 @@ interface Suggestion {
   latestResult: string | null;
 }
 
-export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", state = "", city = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; state?: string; city?: string }) {
+export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", state = "", city = "", jurisdiction = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; state?: string; city?: string; jurisdiction?: string }) {
   const [query, setQuery] = useState(initialQuery);
   const [interacted, setInteracted] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -32,7 +32,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?${new URLSearchParams({ q, limit: "6", state, city })}`, { signal: controller.signal });
+        const res = await fetch(`/api/search?${new URLSearchParams({ q, limit: "6", state, city, jurisdiction })}`, { signal: controller.signal });
         if (!res.ok) return;
         const data = await res.json();
         if (Array.isArray(data.results)) {
@@ -48,7 +48,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
       controller.abort();
       clearTimeout(timer);
     };
-  }, [query, state, city, interacted]);
+  }, [query, state, city, jurisdiction, interacted]);
 
   useEffect(() => {
     const onPointer = (event: MouseEvent) => {
@@ -67,7 +67,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
           const q = query.trim();
           if (q) {
             setOpenList(false);
-            router.push(`/search?${new URLSearchParams({ q, state, city })}`);
+            router.push(`/search?${new URLSearchParams({ q, state, city, jurisdiction })}`);
           }
         }}
       >

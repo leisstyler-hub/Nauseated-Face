@@ -1,12 +1,12 @@
 // Read only: rendering never collects source data or starts an import.
-export async function loadSavedFeed(store, limit = 100) {
-  const [freshness, items] = await Promise.all([store.status(), store.latest(limit, 0, undefined, 'wa-king')]);
+export async function loadSavedFeed(store, limit = 100, city = '', includeWeeklyHistory = false) {
+  const [freshness, items] = await Promise.all([store.status(), store.homeFeed ? store.homeFeed(limit, 'wa-king', city, includeWeeklyHistory ? new Date(Date.now()-7*86400000).toISOString() : null) : store.latest(limit, 0, undefined, 'wa-king')]);
   const rows = [];
   const observed = [];
   let stale = Boolean(freshness.stale);
   const businesses = new Set();
   const newestFirst = [...items].sort((a, b) => (b.inspectionDate ?? '').localeCompare(a.inspectionDate ?? '') || a.id.localeCompare(b.id));
-  const selected = newestFirst.filter(item => {
+  const selected = includeWeeklyHistory ? newestFirst : newestFirst.filter(item => {
     const key = item.businessId ?? item.id;
     if (businesses.has(key)) return false;
     businesses.add(key);

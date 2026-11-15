@@ -23,6 +23,8 @@ export default function PrivacyPage() {
       <h2>Administrator accounts</h2>
       <p>Private administrator sign-in uses essential session cookies and stored account details to protect owner-only controls. Public visitor analytics are separate from these accounts. No public signup or newsletter is connected.</p>
 
+      <h2>Remembered location</h2>
+      <p>Your chosen city or region is saved in this browser and in a first-party preference cookie for up to one year so the homepage and search show that area. This stores the selected place, not your precise coordinates, and is separate from visitor analytics.</p>
       <h2>Optional location sharing</h2>
       <p>
         If you tap Use my location, your browser asks permission to provide your

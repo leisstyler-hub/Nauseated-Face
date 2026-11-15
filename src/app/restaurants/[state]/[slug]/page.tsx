@@ -113,6 +113,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
       </p>
 
       <h2 className="text-xl font-bold">Inspection timeline</h2>
+      <p className="mt-3 text-sm leading-7 text-muted">{profile.inspections.length} saved inspections{profile.inspections.at(-1)?.inspectionDate && latest?.inspectionDate ? `, ${formatInspectionDate(profile.inspections.at(-1)!.inspectionDate!)} to ${formatInspectionDate(latest.inspectionDate)}` : ''}. This includes historical records available from the published source.</p>
       <ol className="mt-4 flex flex-col gap-4">
         {profile.inspections.map((inspection) => (
           <li key={inspection.id} className="rounded-xl border border-card-border bg-card p-5">
@@ -144,7 +145,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
         ))}
       </ol>
       <p className="mt-4 text-xs text-muted">
-        Saved history is a sample and may not include every inspection this establishment has ever had. Disagree with a
+        Published source history may not include every inspection this establishment has ever had. Disagree with a
         record? <Link href="/corrections" className="text-nausea underline">Request a correction</Link>.
       </p>
 

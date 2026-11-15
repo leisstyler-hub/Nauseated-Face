@@ -1,8 +1,11 @@
+import { getHomeArea } from "@/lib/home-area";
 import { connection } from "next/server";
 import { getInspectionFeed } from "@/lib/kingcounty";
 import { InspectionTicker } from "./InspectionTicker";
 export async function TickerSection() {
   await connection();
+  const area = await getHomeArea();
+  if (area.jurisdictionId !== "wa-king") return <div className="ticker px-4 py-3 text-xs text-muted">{area.label}: official inspection records below. Availability depends on the selected source.</div>;
   let events;
   try {
     events = (await getInspectionFeed()).events;

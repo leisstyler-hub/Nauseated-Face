@@ -7,7 +7,7 @@ import { Source, SOURCE } from '../source.mjs';
 export const adapter = {
   jurisdictionId: 'wa-king',
   stateCode: 'WA',
-  createSource: options => new Source(options),
+  createSource: options => new Source({ pageSize: 10000, ...options }),
   establishment(raw) {
     return {
       officialId: raw.business_id,

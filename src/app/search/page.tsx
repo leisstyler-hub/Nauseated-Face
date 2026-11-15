@@ -1,3 +1,4 @@
+import { getHomeArea } from "@/lib/home-area";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SearchBox } from "@/components/SearchBox";
@@ -11,12 +12,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string | string[]; state?: string; city?: string; page?: string; sort?: string }> }) {
+export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string | string[]; state?: string; city?: string; page?: string; sort?: string; jurisdiction?: string }> }) {
   const params = await searchParams;
+  const area = await getHomeArea();
   const q = typeof params.q === "string" ? params.q.slice(0, 120) : "";
   const states = await getStates();
-  const state = typeof params.state === "string" ? params.state.slice(0, 2).toUpperCase() : "";
-  const city = typeof params.city === "string" ? params.city.slice(0, 80) : "";
+  const state = typeof params.state === "string" ? params.state.slice(0, 2).toUpperCase() : area.stateCode;
+  const city = typeof params.city === "string" ? params.city.slice(0, 80) : area.city;
+  const jurisdiction = typeof params.jurisdiction === "string" ? params.jurisdiction.slice(0,80) : (params.state === undefined && params.city === undefined ? area.jurisdictionId : "");
   const sort = ["date", "name", "result"].includes(params.sort ?? "") ? params.sort! : "date";
   const requested = Number(params.page);
   const page = Number.isInteger(requested) && requested > 0 && requested <= 5000 ? requested : 1;
@@ -25,14 +28,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   let failed = false;
   if (q.trim().length >= 2) {
     try {
-      results = await searchEstablishments(q, state, city, (page - 1) * 20, sort);
+      results = await searchEstablishments(q, state, city, (page - 1) * 20, sort, jurisdiction);
     } catch {
       failed = true;
     }
   }
   const hasNext = results.length > 20;
   results = results.slice(0, 20);
-  const pageHref = (n: number) => `/search?${new URLSearchParams({ q, state, city, sort, page: String(n) })}`;
+  const pageHref = (n: number) => `/search?${new URLSearchParams({ q, state, city, jurisdiction, sort, page: String(n) })}`;
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
       <p className="text-xs font-bold tracking-widest text-nausea">PICK YOUR POISON. FIGURATIVELY.</p>
@@ -41,7 +44,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         Search by restaurant name, address, city or ZIP across every covered market. Results come from saved official
         health-department records; coverage per city is disclosed on its page.
       </p>
-      <SearchBox key={`${q}-${state}-${city}`} autoFocus initialQuery={q} state={state} city={city} />
+      <SearchBox key={`${q}-${state}-${city}`} autoFocus initialQuery={q} state={state} city={city} jurisdiction={jurisdiction} />
       <form action="/search" className="mt-5 flex flex-wrap items-end gap-3 text-sm">
         <input type="hidden" name="q" value={q} />
         <label className="flex flex-col gap-1">State<select name="state" defaultValue={state} className="rounded-lg border border-card-border bg-card p-2"><option value="">All available states</option>{states.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}</select></label>

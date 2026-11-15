@@ -1,7 +1,9 @@
+import { getHomeArea } from "@/lib/home-area";
 import Link from "next/link";
 import { Face } from "@/components/Face";
 import { SearchBox } from "@/components/SearchBox";
-export function Hero() {
+export async function Hero() {
+  const area = await getHomeArea();
   return (
     <section className="hero">
       <div className="hero-copy">
@@ -31,7 +33,7 @@ export function Hero() {
           inspections near you.
         </p>
         <div className="my-2">
-          <SearchBox />
+          <SearchBox state={area.stateCode} city={area.city} jurisdiction={area.jurisdictionId} />
         </div>
         <div className="hero-actions">
           <a href="#worst" className="primary-button">
