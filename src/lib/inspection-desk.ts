@@ -1,11 +1,11 @@
-import {cacheLife,cacheTag} from 'next/cache';
+﻿import {cacheLife,cacheTag} from 'next/cache';
 import {getHomeArea} from '@/lib/home-area';
 import type {DeskReport} from '@/components/CategoryReport';
 import {openSiteStore,savedStorageEnabled} from '../../backend/production.mjs';
 import {buildInspectionDesk,deskStrategy,pacificDate} from '../../backend/inspection-desk.mjs';
 import {JURISDICTIONS} from '../../backend/jurisdictions.mjs';
 async function cachedReport(jurisdictionId:string,stateCode:string,city:string,today:string,offset:number){
- 'use cache';
+ 'use cache: remote';
  cacheLife({stale:0,revalidate:60,expire:300});cacheTag('inspection-desk');
  const store=openSiteStore();
  try{return buildInspectionDesk(await store.inspectionDeskHistory({jurisdictionId,stateCode,city}),{strategy:'king_county_points',today,offset}) as DeskReport;}
@@ -23,3 +23,4 @@ export async function loadInspectionDesk(offset=0){
  }else if(strategy){unavailable=true;}
  return {area,report,unavailable};
 }
+
