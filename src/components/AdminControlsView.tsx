@@ -12,6 +12,6 @@ export function AdminControlsView({ data, websiteEnabled = true }: { data: Opera
     <div className="mb-8"><WebsiteToggle enabled={websiteEnabled} /></div>
     <AdminControls />
     <div className="mt-8"><JurisdictionToggles sources={data.sources} /></div>
-    <Link href="/admin#import-history" className="mt-6 inline-flex min-h-12 items-center text-sm text-nausea underline">View import history and source health →</Link>
+    <Link href="/admin/imports" className="mt-6 inline-flex min-h-12 items-center text-sm text-nausea underline">View import history →</Link>
   </section>;
 }

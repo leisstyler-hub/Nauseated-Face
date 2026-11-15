@@ -5,10 +5,12 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 import { headers } from "next/headers";
+import { TrafficTracker } from "@/components/TrafficTracker";
 
 async function WebsiteShell({ children }: { children: React.ReactNode }) {
   if ((await headers()).get("x-nf-maintenance") === "1") return children;
   return <>
+    <TrafficTracker />
     <Suspense fallback={<header className="h-16 border-b border-card-border" />}><SiteHeader /></Suspense>
     <main className="flex flex-1 flex-col"><Suspense fallback={<p className="p-8 text-muted">Loading official records...</p>}>{children}</Suspense></main>
     <SiteFooter />

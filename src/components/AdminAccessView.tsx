@@ -1,0 +1,4 @@
+export interface AdminAccount {id:string;name:string;email:string;role:string}
+export function AdminAccessView({accounts}:{accounts:AdminAccount[]}){
+ return <><h1 className="text-3xl font-extrabold">Admin Access</h1><p className="my-5 max-w-2xl text-sm leading-7 text-muted">Actual administrator account directory. Only owner accounts can open these private operations pages. Public signup is disabled. This view does not change roles or passwords.</p><ul className="grid gap-4 sm:grid-cols-2">{accounts.map(account=><li key={account.id} className="min-w-0 rounded-xl border border-card-border bg-card p-5"><h2 className="break-words font-bold">{account.name}</h2><p className="mt-2 break-all text-sm text-muted">{account.email}</p><p className="mt-3 text-sm font-bold text-nausea">Role: {account.role}</p></li>)}</ul></>;
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
+import { AnalyticsPreference } from "@/components/AnalyticsPreference";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
 
@@ -9,11 +10,18 @@ export default function PrivacyPage() {
     <LegalPage title="Privacy Policy" updated="November 14, 2026">
       <h2>What we collect today</h2>
       <p>
-        As of this writing, Nauseated Face does not have an account system,
-        newsletter signup, or analytics provider connected. If and when we
-        add any of these, this page will be updated first to describe
-        exactly what is collected and why, before the feature goes live.
+        We measure public website traffic using a random first-party browser identifier,
+        visit timestamps and broad page categories such as search or inspection.
+        The identifier is stored in a secure, HttpOnly cookie that expires after 180 days
+        and is renewed when you visit. We do not store IP addresses, query strings,
+        precise location or browser fingerprints in these analytics, and do not link
+        the identifier to an account. Our hosting provider may keep its own operational logs.
       </p>
+      <p>Visits split after 30 minutes of inactivity. We use these records to report daily traffic and the share of recognized browsers that come back. Different devices or cleared cookies may be counted as new visitors. Known bots, automated tests and admin browsers are excluded where detected; detection is not perfect.</p>
+      <p>We honor Do Not Track and Global Privacy Control signals for analytics. You can also disable analytics below. This preference is saved in this browser; changing browsers or clearing local storage resets it. Disabling analytics clears your visitor cookie but does not remove previously recorded anonymous statistics.</p>
+      <AnalyticsPreference />
+      <h2>Administrator accounts</h2>
+      <p>Private administrator sign-in uses essential session cookies and stored account details to protect owner-only controls. Public visitor analytics are separate from these accounts. No public signup or newsletter is connected.</p>
 
       <h2>Optional location sharing</h2>
       <p>
