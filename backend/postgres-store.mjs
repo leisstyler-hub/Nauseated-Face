@@ -177,16 +177,25 @@ export class PostgresStore {
       inspections: inspections.map(r => ({ id: r.id, businessId: r.business_id, serial: r.serial, inspectionDate: r.inspection_date, fields: JSON.parse(r.fields_json), rowCount: Number(r.row_count), observedAt: r.observed_at, stale: stale(r.observed_at), violations: violations.filter(v => v.event_id === r.id).map(v => ({ description: v.description, type: v.type, points: v.points })), sourceUrl: sourceUrl(r.business_id, r.serial, r.jurisdiction_id) })),
     };
   }
-  async inspectionDeskHistory({jurisdictionId,stateCode,city='',since}) {
+  async inspectionDeskHistory({jurisdictionId,stateCode,city='',since='0000-01-01'}) {
     const params=[jurisdictionId,stateCode,since];
     const cityClause=city?`AND ${cityKeySql('e.city','e.state_code')}=$4`:'';
     if(city)params.push(canonicalCityKey(stateCode,city));
-    const rows=await query(this.pool,`SELECT e.id,e.name,e.slug,e.city,e.state_code,i.id AS event_id,i.inspection_date,i.fields_json,
-      coalesce(v.violations,'[]'::json) AS violations
+    // Filter inspections before aggregating their violations; do not aggregate
+    // every jurisdiction's violation table for each city request. Only the three
+    // fields used by the desk cross the database boundary.
+    const rows=await query(this.pool,`WITH scoped AS MATERIALIZED (
+      SELECT e.id,e.name,e.slug,e.city,e.state_code,i.id AS event_id,i.inspection_date,
+      json_build_object('inspection_type',(i.fields_json::jsonb)->>'inspection_type',
+        'inspection_score',(i.fields_json::jsonb)->>'inspection_score',
+        'inspection_closed_business',(i.fields_json::jsonb)->>'inspection_closed_business')::text AS fields_json
       FROM nf_preview.establishments e JOIN nf_preview.inspections i ON i.establishment_id=e.id
-      LEFT JOIN (SELECT event_id,json_agg(json_build_object('description',description,'type',type,'points',points) ORDER BY source_id) AS violations FROM nf_preview.violations GROUP BY event_id) v ON v.event_id=i.id
       WHERE e.jurisdiction_id=$1 AND e.state_code=$2 AND (i.inspection_date >= $3 OR (i.fields_json::jsonb)->>'inspection_closed_business'='Yes') AND e.${PUBLISHED} ${cityClause}
-      ORDER BY e.id,i.inspection_date DESC,i.id`,params);
+    ), findings AS (
+      SELECT v.event_id,json_agg(json_build_object('description',v.description,'type',v.type,'points',v.points) ORDER BY v.source_id) AS violations
+      FROM nf_preview.violations v JOIN scoped s ON s.event_id=v.event_id GROUP BY v.event_id
+    ) SELECT s.*,coalesce(v.violations,'[]'::json) AS violations FROM scoped s
+      LEFT JOIN findings v ON v.event_id=s.event_id ORDER BY s.id,s.inspection_date DESC,s.event_id`,params);
     const businesses=new Map();
     for(const r of rows){const b=businesses.get(r.id)??{id:r.id,name:r.name,slug:r.slug,city:r.city,stateCode:r.state_code,events:[]};b.events.push({id:r.event_id,date:r.inspection_date,fields:JSON.parse(r.fields_json),violations:r.violations});businesses.set(r.id,b);}
     return [...businesses.values()];

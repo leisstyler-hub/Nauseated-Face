@@ -37,3 +37,20 @@ test('evidence lists paginate without truncating eligibility; awards remain capp
 test('closure findings older than trend window are retained as dated history',()=>{
  const r=report([business('a',[event('2021-01-01','100',{fields:{inspection_closed_business:'Yes'}})])]);assert.equal(r.categories.find(c=>c.id==='closures').total,1);
 });
+
+test('repeat codes count the complete current routine streak beyond two years',()=>{
+ const v=code=>({description:code+' - finding',type:'BLUE'});
+ const visits=['2023-01-01','2024-06-14','2025-03-20','2025-08-21','2026-05-21'].map((date,i)=>event(date,'5',{violations:[v(i===0?'9999':'3200')]}));
+ const item=report([business('pho',visits)]).categories.find(c=>c.id==='repeats').items[0];
+ assert.equal(item.longestStreak,4);assert.deepEqual(item.runs[0].dates,['2026-05-21','2025-08-21','2025-03-20','2024-06-14']);assert.equal(item.runs[0].code,'3200');
+});
+test('repeat streak stops at a nonmatching routine and counts each distinct date once',()=>{
+ const v={description:'3200 - finding',type:'BLUE'};
+ const visits=[event('2025-01-01','5',{violations:[v]}),event('2025-02-01','0'),event('2025-03-01','5',{violations:[v]}),event('2026-01-01','5',{violations:[v]}),event('2026-01-01','10',{violations:[v]})];
+ const item=report([business('a',visits)]).categories.find(c=>c.id==='repeats').items[0];assert.equal(item.longestStreak,2);
+});
+test('clean plate rewards five consecutive zero-point routines rather than a three-visit cutoff',()=>{
+ const visits=['2023-01-01','2024-01-01','2024-06-01','2025-01-01','2025-09-01','2026-01-01'].map((date,i)=>event(date,i===0?'20':'0'));
+ const items=report([business('long',visits),business('short',[event('2025-01-01','0'),event('2026-01-01','0')])]).categories.find(c=>c.id==='clean').items;
+ assert.equal(items[0].id,'long');assert.equal(items[0].cleanStreak,5);assert.equal(items[0].history.length,6);assert.equal(items[1].cleanStreak,2);
+});

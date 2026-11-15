@@ -3,14 +3,14 @@ import {useState} from 'react';
 import {DESK_CATEGORIES} from '../../backend/desk-categories.mjs';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
-export interface DeskItem {id:string;name:string;city:string;href:string;date:string;score?:number;latestDate?:string;latestScore?:number|null;count?:number;previousCount?:number;previousDate?:string;previousScore?:number;change?:number;mean?:number;codes?:string[];status?:string;history?:{date:string;score?:number;red?:number}[]}
+export interface DeskItem {id:string;name:string;city:string;href:string;date:string;score?:number;latestDate?:string;latestScore?:number|null;count?:number;previousCount?:number;previousDate?:string;previousScore?:number;change?:number;mean?:number;codes?:string[];status?:string;cleanStreak?:number;longestStreak?:number;runs?:{code:string;count:number;dates:string[]}[];history?:{date:string;score?:number;red?:number}[]}
 export interface DeskCategory {id:string;name:string;period:string;description:string;limit:number;total:number;items:DeskItem[]}
 export interface DeskReport {supported:boolean;today:string;categories:DeskCategory[]}
 function Evidence({item,category}:{item:DeskItem;category:string}){
  if(category==='comebacks')return <><strong>{item.change} fewer points</strong><p>{item.previousDate}: {item.previousScore} points → {item.date}: {item.score} points</p></>;
- if(category==='clean')return <><strong>{item.mean?.toFixed(1)} average points · {item.history?.length} routine inspections</strong><p>{item.history?.map(e=>`${e.date}: ${e.score} points`).reverse().join(' → ')}</p></>;
+ if(category==='clean')return <>{(item.cleanStreak??0)>=2&&<p><strong>{item.cleanStreak} consecutive zero-point routine inspections</strong></p>}<strong>{item.mean?.toFixed(1)} average points · {item.history?.length} routine inspections</strong><p>{item.history?.map(e=>`${e.date}: ${e.score} points`).reverse().join(' → ')}</p></>;
  if(category==='red')return <><strong>{item.count} critical findings on latest routine inspection</strong><p>{item.history?.map(e=>`${e.date}: ${e.red}`).reverse().join(' → ')} (critical-finding counts)</p></>;
- if(category==='repeats')return <><strong>{item.count} recurring violation {item.count===1?'code':'codes'}: {item.codes?.join(', ')}</strong><p>Recorded on {item.previousDate} and {item.date}</p></>;
+ if(category==='repeats')return <><strong>Longest current streak: {item.longestStreak} consecutive routine inspections</strong>{item.runs?.map(run=><p key={run.code}><strong>Code {run.code}: {run.count} consecutive inspections</strong><br/>{[...run.dates].reverse().join(' → ')}</p>)}</>;
  if(category==='closures')return <><strong>Closure recorded {item.date}</strong><p>{item.status}. A historical flag does not establish a current closure.</p></>;
  if(category==='violations')return <strong>{item.count} distinct violation items · {item.date}</strong>;
  return <><strong>{item.score} official points · {item.date}</strong>{item.latestDate&&item.latestDate>item.date&&<p>Later routine inspection: {item.latestDate}{item.latestScore!==null&&item.latestScore!==undefined?` · ${item.latestScore} points`:''}. Open the profile for full follow-up history.</p>}</>;

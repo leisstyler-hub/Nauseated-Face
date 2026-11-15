@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache';
 import { openSiteStore, refreshAuthorized, runProductionRefresh } from '../../../../backend/production.mjs';
 
 export const maxDuration = 300;
@@ -8,6 +9,7 @@ async function refresh(request) {
   try {
     store = openSiteStore();
     const result = await runProductionRefresh(store);
+    revalidateTag('inspection-desk', { expire: 0 });
     return Response.json({ result, coverage: 'Latest complete inspection events per enabled jurisdiction; retained earlier imports. Not full coverage of any jurisdiction.' }, { status: result.failures?.length ? 503 : 200, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     const busy = error.message === 'Another preview importer is active';
