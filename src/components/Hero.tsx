@@ -27,7 +27,7 @@ export async function Hero() {
           </span>
         </h1>
         <p className="hero-description">
-          Nauseated Face turns official food inspection records into readable rankings — we care where we eat and you do too, and facts that always come first. Explore restaurant inspections near you.
+          Nauseated Face turns official food inspection records into clear, readable rankings. We care where we eat, and we know you do too. Facts come first. Explore restaurant inspections near you.
         </p>
         <div className="my-2">
           <SearchBox state={area.stateCode} city={area.city} jurisdiction={area.jurisdictionId} />
