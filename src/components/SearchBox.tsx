@@ -15,6 +15,7 @@ interface Suggestion {
 
 export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", state = "", city = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; state?: string; city?: string }) {
   const [query, setQuery] = useState(initialQuery);
+  const [interacted, setInteracted] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [active, setActive] = useState(-1);
   const [openList, setOpenList] = useState(false);
@@ -23,6 +24,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!interacted) return;
     const q = query.trim();
     if (q.length < 2) {
       return;
@@ -46,7 +48,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
       controller.abort();
       clearTimeout(timer);
     };
-  }, [query, state, city]);
+  }, [query, state, city, interacted]);
 
   useEffect(() => {
     const onPointer = (event: MouseEvent) => {
@@ -77,7 +79,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
             id={`${listId}-input`}
             type="search"
             value={query}
-            onChange={(event) => { setQuery(event.target.value); setSuggestions([]); setActive(-1); }}
+            onChange={(event) => { setInteracted(true); setQuery(event.target.value); setSuggestions([]); setActive(-1); }}
             onFocus={() => suggestions.length > 0 && setOpenList(true)}
             onKeyDown={(event) => {
               if (event.key === "Escape") setOpenList(false);

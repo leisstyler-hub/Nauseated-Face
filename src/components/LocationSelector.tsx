@@ -58,7 +58,8 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
   choices.push({ label: "All available locations", href: "/locations" });
   let savedHref = "";
   try { savedHref = JSON.parse(saved ?? "null")?.href ?? ""; } catch { /* Ignore invalid stored values. */ }
-  const current = choices.find(c => c.href === pathname) ?? choices.find(c => c.href === savedHref) ?? { label: "Seattle, WA", href: "/washington/seattle" };
+  const profileState = pathname.startsWith("/restaurants/") ? states.find(state => state.slug === pathname.split("/")[2]) : undefined;
+  const current = choices.find(c => c.href === pathname) ?? (profileState ? { label: profileState.name, href: `/${profileState.slug}` } : undefined) ?? choices.find(c => c.href === savedHref) ?? { label: "Seattle, WA", href: "/washington/seattle" };
 
   const pick = (state: SelectorState, city: SelectorCity) => {
     const next = { label: `${city.name}, ${state.code}`, href: `/${state.slug}/${city.slug}` };

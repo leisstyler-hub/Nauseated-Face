@@ -16,7 +16,7 @@ export function SiteFooter() {
         <p className="max-w-3xl text-sm leading-relaxed text-muted">
           Nauseated Face is an independent, satirical food-safety publication.
           It is <strong className="text-foreground">not affiliated with, endorsed by, or operated by</strong>{" "}
-          any government agency. Inspection findings come from the responsible health authority?s public records,
+          any government agency. Inspection findings come from the responsible health authority&apos;s public records,
           identified on each report. Historical results do not establish current conditions.{" "}
           <Link href="/locations" className="font-medium text-nausea underline underline-offset-2">View sources and coverage</Link>.
 

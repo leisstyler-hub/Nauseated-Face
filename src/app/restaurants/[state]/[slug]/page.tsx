@@ -126,7 +126,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
               <span className="font-semibold text-nausea">{inspection.fields.inspection_result ?? "Result not recorded"}</span>
               {inspection.fields.inspection_score !== undefined && <span className="text-muted">Official score as published: {inspection.fields.inspection_score}</span>}
             </div>
-            {inspection.violations.length > 0 ? <div className="mt-4"><h3 className="text-sm font-bold">Here?s what inspectors found ? official wording</h3><ul className="mt-2 space-y-3 text-sm text-muted">{inspection.violations.map((v, index) => <li key={index} className="whitespace-pre-wrap break-words">{v.type && <span className="font-semibold">{v.type}: </span>}{v.description}{v.points !== null && <span> ({v.points} points)</span>}</li>)}</ul></div> : <p className="mt-3 text-xs text-muted">No violation wording supplied in this saved record. This is not a current safety rating.</p>}
+            {inspection.violations.length > 0 ? <div className="mt-4"><h3 className="text-sm font-bold">Official wording: what inspectors found</h3><ul className="mt-2 space-y-3 text-sm text-muted">{inspection.violations.map((v, index) => <li key={index} className="whitespace-pre-wrap break-words">{v.type && <span className="font-semibold">{v.type}: </span>}{v.description}{v.points !== null && <span> ({v.points} points)</span>}</li>)}</ul></div> : <p className="mt-3 text-xs text-muted">No violation wording supplied in this saved record. This is not a current safety rating.</p>}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs">
               {profile.jurisdiction?.id === "wa-king" && inspection.inspectionDate && (
                 <Link

@@ -46,10 +46,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         <input type="hidden" name="q" value={q} />
         <label className="flex flex-col gap-1">State<select name="state" defaultValue={state} className="rounded-lg border border-card-border bg-card p-2"><option value="">All available states</option>{states.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}</select></label>
         <label className="flex flex-col gap-1">City<input name="city" defaultValue={city} placeholder="All cities" className="w-40 rounded-lg border border-card-border bg-card p-2" /></label>
-        <label className="flex flex-col gap-1">Sort<select name="sort" defaultValue={sort} className="rounded-lg border border-card-border bg-card p-2"><option value="date">Latest inspection</option><option value="name">Restaurant name</option><option value="result">Official result (A?Z)</option></select></label>
+        <label className="flex flex-col gap-1">Sort<select name="sort" defaultValue={sort} className="rounded-lg border border-card-border bg-card p-2"><option value="date">Latest inspection</option><option value="name">Restaurant name</option><option value="result">Official result (A-Z)</option></select></label>
         <button className="rounded-lg border border-nausea px-4 py-2 text-nausea">Apply filters</button>
       </form>
-      <p className="mt-3 text-xs text-muted">Official results retain each authority?s wording. Incompatible numeric scores are never sorted together nationally.</p>
+      <p className="mt-3 text-xs text-muted">Official results retain each authority&apos;s wording. Incompatible numeric scores are never sorted together nationally.</p>
       <nav aria-label="Search result pages" className="mt-6 flex flex-wrap gap-6 text-sm text-nausea">{page > 1 && <Link href={pageHref(page - 1)}>Previous page</Link>}{hasNext && <Link href={pageHref(page + 1)}>Next page</Link>}</nav>
       {failed && (
         <p className="mt-8 rounded-xl border border-critical/30 bg-critical-soft p-6 text-sm text-critical">
