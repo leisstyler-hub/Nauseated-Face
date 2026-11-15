@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { nearbyCities } from '../src/lib/nearby.ts';
+import { cityCenter } from '../backend/city-centers.mjs';
+
+test('Seattle remains discoverable when its inspection feed lacks restaurant coordinates', () => {
+  const reference = cityCenter('WA', 'Seattle');
+  const city = { name: 'Seattle', covered: true, ...reference };
+  assert.equal(nearbyCities(47.61, -122.33, [city])[0].name, 'Seattle');
+  assert.deepEqual(nearbyCities(47.61, -122.33, [{ ...city, covered: false }]), []);
+});
 
 test('nearby suggestions require published records and valid coordinates, and stay within 50 miles', () => {
   const cities = [

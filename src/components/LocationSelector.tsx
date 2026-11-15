@@ -94,7 +94,7 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
       }
       const matches = nearbyCities(coords.latitude, coords.longitude, states.flatMap(state => state.cities.map(city => ({ ...city, state }))));
       setNearby(matches);
-      setLocationMessage(matches.length ? "Nearby cities with records (within about 50 miles). Coverage may be limited." : "No verified records within about 50 miles yet. You can explore other cities below.");
+      setLocationMessage(matches.length ? "Nearby cities with records (within about 50 miles). Coverage may be limited." : "No nearby cities could be matched yet. Choose a city below to check available coverage.");
     }, (error) => {
       setLocating(false);
       setLocationMessage(error.code === 1 ? "Location permission was not granted. You can still choose a city below." : "We could not get your location. Try again or choose a city below.");
@@ -138,7 +138,7 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
           <p className="mb-3 text-xs text-muted">Optional. Your browser asks permission. Coordinates stay in your browser; only your chosen city is remembered.</p>
           <p role="status" className="mb-2 text-xs text-muted">{locationMessage}</p>
           {nearby.map(city => <Link key={`${city.state.code}-${city.slug}`} href={`/${city.state.slug}/${city.slug}`} onClick={() => pick(city.state, city)} className="mb-2 block rounded-lg border border-nausea/30 px-3 py-2 text-sm text-nausea">
-            {city.name}, {city.state.code} <span className="block text-xs text-muted">{city.statusLabel} · about {Math.round(city.miles)} miles from imported records</span>
+            {city.name}, {city.state.code} <span className="block text-xs text-muted">{city.statusLabel} · about {Math.round(city.miles)} miles to the city area</span>
           </Link>)}
           <label className="sr-only" htmlFor={`${listId}-filter`}>
             Search locations

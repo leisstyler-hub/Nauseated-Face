@@ -4,7 +4,7 @@ interface LocatedCity {
   longitude: number | null;
 }
 
-// Approximate proximity to imported records, not a jurisdiction boundary check.
+// Approximate proximity to a city reference point, not a jurisdiction boundary check.
 // Visitor coordinates are used only in the browser and are never persisted.
 export function nearbyCities<T extends LocatedCity>(latitude: number, longitude: number, cities: T[]): (T & { miles: number })[] {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return [];

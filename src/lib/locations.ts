@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { cache } from "react";
 import { JURISDICTIONS, citySlug, stateSlug } from "../../backend/jurisdictions.mjs";
 import { openSiteStore, savedStorageEnabled } from "../../backend/production.mjs";
+import { cityCenter } from "../../backend/city-centers.mjs";
 
 export type CoverageStatus = "available" | "limited" | "coming_soon" | "unavailable";
 
@@ -83,6 +84,8 @@ export const getStates = cache(async (): Promise<StateEntry[]> => {
     for (const name of names) {
       const hasRecords = Boolean(runtime?.enabled && covered.some(c => c.jurisdictionId === j.id && c.city.toLowerCase() === name.toLowerCase() && c.establishmentCount > 0));
       if (state.cities.some((c) => c.name === name)) continue;
+      const recorded = covered.find(c => c.jurisdictionId === j.id && c.city.toLowerCase() === name.toLowerCase());
+      const point = recorded && recorded.latitude !== null && recorded.longitude !== null ? recorded : cityCenter(j.stateCode, name);
       state.cities.push({
         name,
         slug: citySlug(name),
@@ -92,8 +95,8 @@ export const getStates = cache(async (): Promise<StateEntry[]> => {
         healthAuthority: j.healthAuthority,
         sourceUrl: j.sourceUrl,
         covered: hasRecords,
-        latitude: covered.find(c => c.jurisdictionId === j.id && c.city.toLowerCase() === name.toLowerCase())?.latitude ?? null,
-        longitude: covered.find(c => c.jurisdictionId === j.id && c.city.toLowerCase() === name.toLowerCase())?.longitude ?? null,
+        latitude: point?.latitude ?? null,
+        longitude: point?.longitude ?? null,
       });
     }
     states.set(j.stateCode, state);
