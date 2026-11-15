@@ -2,8 +2,14 @@ import { randomUUID } from 'node:crypto';
 
 // Existing append-only audit history is also the durable switch; no separate migration.
 export async function websiteEnabled(database) {
-  const { rows } = await database.query("SELECT summary FROM admin_control_runs WHERE action='website-availability' AND status='success' ORDER BY started_at DESC, id DESC LIMIT 1");
-  return rows[0]?.summary?.enabled !== false;
+  try {
+    const { rows } = await database.query("SELECT summary FROM admin_control_runs WHERE action='website-availability' AND status='success' ORDER BY started_at DESC, id DESC LIMIT 1");
+    return rows[0]?.summary?.enabled !== false;
+  } catch (error) {
+    // No audit table means no owner has ever recorded an off action.
+    if (error.code === '42P01') return true;
+    throw error;
+  }
 }
 
 export async function setWebsiteEnabled(database, actor, enabled) {

@@ -20,6 +20,12 @@ test('website defaults on, persists off and on, and audits each actor without to
   } finally { await db.close(); }
 });
 
+test('an environment without the audit table defaults on until additive setup, but other storage failures surface', async () => {
+  const db = new PGlite();
+  try { assert.equal(await websiteEnabled(db), true); } finally { await db.close(); }
+  await assert.rejects(websiteEnabled({ query: async () => { throw Object.assign(new Error('offline'), { code: '08006' }); } }), /offline/);
+});
+
 test('website writes require owner, same origin, valid boolean and explicit off confirmation', async () => {
   let calls = 0;
   const apply = async () => { calls++; return { enabled: false }; };
