@@ -121,7 +121,7 @@ export function WeeklyHighlight({
           <p className="scope">
             An inspection record, not a current determination of safety. Index =
             violation points capped at 100; not a probability of illness.{" "}
-            <a href="/methodology">How it works</a>.
+            <Link href="/methodology">How it works</Link>.
           </p>
         </article>
       )}

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS nf_preview.jurisdictions(
 INSERT INTO nf_preview.jurisdictions
  VALUES('wa-king','WA','Washington','King County','Public Health — Seattle & King County',
   'https://data.kingcounty.gov/Health/Food-Establishment-Inspection-Data/f29f-zza5',
-  '{"type":"violation_points","direction":"lower_is_better"}','available',true,'daily',NULL)
+  '{"type":"violation_points","direction":"lower_is_better"}','limited',true,'daily',NULL)
  ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS nf_preview.establishments(
  id TEXT PRIMARY KEY,

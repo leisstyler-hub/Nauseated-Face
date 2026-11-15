@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { PGlite } from '@electric-sql/pglite';
 import { PostgresStore, importPostgres, searchQuery } from './postgres-store.mjs';
 import { JURISDICTIONS, citySlug } from './jurisdictions.mjs';
+import { syncEnabledSources } from './sync.mjs';
 
 const row = (id, business, serial, extra = {}) => ({
   ':id': id, business_id: business, inspection_serial_num: serial, inspection_date: '2026-01-01',
@@ -83,5 +84,75 @@ test('an import without a registered adapter is rejected before touching the sou
   const { db, store } = await open();
   try {
     await assert.rejects(importPostgres(store, source([row('1', 'B-1', 'I-1')]), { type: 'all' }, 'tn-state'), /without an adapter/);
+  } finally { await db.close(); }
+});
+
+test('national imports isolate overlapping official identifiers and retain King County history', async () => {
+  const { db, store } = await open();
+  try {
+    await importPostgres(store, source([row('1', 'B-1', 'I-1')]), { type: 'all' });
+    await importPostgres(store, source([row('1', 'B-1', 'I-1', { name: 'Chicago Kitchen', city: 'Chicago' })]), { type: 'all' }, 'il-chicago');
+    assert.equal((await store.searchEstablishments({ q: 'Chicago' })).length, 0, 'Staged sources must not publish before activation');
+    await db.query("UPDATE nf_preview.jurisdictions SET enabled=true,coverage_status='limited' WHERE id='il-chicago'");
+    assert.equal((await store.searchEstablishments({ q: 'Diner' })).length, 1);
+    assert.equal((await store.searchEstablishments({ q: 'Chicago' }))[0].stateCode, 'IL');
+    assert.equal((await db.query('SELECT * FROM nf_preview.inspections')).rows.length, 2);
+    assert.equal((await store.latest(20, 0, undefined, 'wa-king')).length, 1);
+    assert.ok((await store.establishmentBySlug('IL', (await store.searchEstablishments({ q: 'Chicago' }))[0].slug)).inspections[0].sourceUrl.includes('data.cityofchicago.org'));
+    const prior = (await store.searchEstablishments({ q: 'Diner' }))[0];
+    await importPostgres(store, source([row('1', 'B-1', 'I-1', { name: 'Renamed Kitchen' })]), { type: 'all' });
+    assert.equal((await store.establishmentBySlug('WA', prior.slug)).name, 'Renamed Kitchen');
+    await assert.rejects(importPostgres(store, { snapshot() { throw new Error('offline'); } }, { type: 'all' }, 'il-chicago'));
+    assert.equal((await store.searchEstablishments({ q: 'Chicago' })).length, 1);
+    assert.equal((await store.status()).error, null, 'Chicago failure must not mark King County feed as failed');
+    const chicago = (await store.latest(10, 0, undefined, 'il-chicago'))[0];
+    await importPostgres(store, source([]), { type: 'all' }, 'il-chicago');
+    assert.ok((await store.detail(chicago.id)).sourceUrl.includes('data.cityofchicago.org'), 'Archived national rows must retain source authority');
+  } finally { await db.close(); }
+});
+
+test('operations reports actual source counts, failures, and storage without inventing revenue', async () => {
+  const { db, store } = await open();
+  try {
+    await importPostgres(store, source([row('1', 'B', 'I')]), { type: 'all' });
+    await assert.rejects(importPostgres(store, { snapshot() { throw Error('offline'); } }, { type: 'all' }));
+    const data = await store.operations();
+    assert.equal(data.counts.establishments, 1);
+    assert.equal(data.counts.inspections, 1);
+    assert.equal(data.sources.find(s => s.id === 'wa-king').lastAttempt.status, 'error');
+    assert.ok(data.sources.find(s => s.id === 'wa-king').lastSuccess);
+    assert.equal(data.integrations.advertising, 'not_connected');
+    assert.ok(Number(data.storage.schemaBytes) >= 0);
+    for (let i=0; i<21; i++) await db.query("INSERT INTO nf_preview.refresh_runs(started_at,status,scope,jurisdiction_id) VALUES('test','error','{}','il-chicago')");
+    assert.equal((await store.operations()).sources.find(s => s.id === 'wa-king').lastAttempt.status, 'error');
+  } finally { await db.close(); }
+});
+
+test('indexed search accepts state and unicode terms and bounded pagination', async () => {
+  const { db, store } = await open();
+  try {
+    await importPostgres(store, source([row('1', 'A', '1', { name: 'Café Test' }), row('2', 'B', '2', { name: 'Café Other' })]), { type: 'all' });
+    assert.equal((await store.searchEstablishments({ q: 'Washington' })).length, 2);
+    assert.equal((await store.searchEstablishments({ q: 'Café', limit: 1, offset: 1 })).length, 1);
+    await assert.rejects(store.searchEstablishments({ q: 'Test', limit: 1.5 }), /pagination/);
+  } finally { await db.close(); }
+});
+
+test('scheduled collector isolates failures, retains prior data and respects source enablement', async () => {
+  const { db, store } = await open();
+  try {
+    await importPostgres(store, source([row('1', 'B', 'I')]), { type: 'all' });
+    await db.query("UPDATE nf_preview.jurisdictions SET enabled=true WHERE id='il-chicago'");
+    const called = [];
+    const result = await syncEnabledSources(store, id => {
+      called.push(id);
+      if (id === 'wa-king') return { snapshot() { throw Error('offline'); } };
+      return { snapshot: async scope => ({ rows: [row('1', 'B', 'I', { name: 'Chicago Test', city: 'Chicago' })], scope, revision: 'test', urls: [] }) };
+    });
+    assert.deepEqual(new Set(called), new Set(['wa-king', 'il-chicago']));
+    assert.deepEqual(result.failures.map(f => f.jurisdictionId), ['wa-king']);
+    assert.equal(result.sources[0].jurisdictionId, 'il-chicago');
+    assert.equal((await store.latest(10, 0, undefined, 'wa-king')).length, 1);
+    assert.match((await store.status()).error, /Import failed/, 'Chicago success cannot hide King County failure');
   } finally { await db.close(); }
 });

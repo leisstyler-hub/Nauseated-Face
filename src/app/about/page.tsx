@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 import { SOURCE_DATASET_URL } from "@/lib/kingcounty";
@@ -45,13 +46,13 @@ export default function AboutPage() {
         illness unless an official agency confirms it, and we never publish
         unsupported accusations, rumors, employee names, or customer
         information. See our{" "}
-        <a href="/methodology" className="font-medium text-nausea underline underline-offset-2">
+        <Link href="/methodology" className="font-medium text-nausea underline underline-offset-2">
           Data Methodology
-        </a>{" "}
+        </Link>{" "}
         and{" "}
-        <a href="/corrections" className="font-medium text-nausea underline underline-offset-2">
+        <Link href="/corrections" className="font-medium text-nausea underline underline-offset-2">
           Corrections Policy
-        </a>{" "}
+        </Link>{" "}
         for specifics.
       </p>
     </LegalPage>

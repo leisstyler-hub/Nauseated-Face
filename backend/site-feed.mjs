@@ -1,6 +1,6 @@
 // Read only: rendering never collects source data or starts an import.
 export async function loadSavedFeed(store, limit = 100) {
-  const [freshness, items] = await Promise.all([store.status(), store.latest(limit, 0)]);
+  const [freshness, items] = await Promise.all([store.status(), store.latest(limit, 0, undefined, 'wa-king')]);
   const rows = [];
   const observed = [];
   let stale = Boolean(freshness.stale);

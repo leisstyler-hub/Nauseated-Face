@@ -31,7 +31,7 @@ export async function withTransaction(pool, action) {
   }
 }
 
-export function prepareSnapshot(snapshot) {
+export function prepareSnapshot(snapshot, jurisdiction = 'wa-king') {
   if (!snapshot || !Array.isArray(snapshot.rows) || !['all', 'latest', 'business'].includes(snapshot.scope?.type)) throw new Error('Invalid snapshot scope/rows');
   if (snapshot.scope.type === 'business' && !snapshot.scope.businessId) throw new Error('Business scope requires businessId');
   if (snapshot.scope.type === 'latest' && (!Number.isInteger(snapshot.scope.limit) || snapshot.scope.limit < 1 || snapshot.scope.limit > 100)) throw new Error('Latest scope requires bounded limit');
@@ -42,12 +42,12 @@ export function prepareSnapshot(snapshot) {
     if (seen.has(row[':id'])) throw new Error('Duplicate source row during pagination');
     seen.add(row[':id']);
     if (snapshot.scope.type === 'business' && row.business_id !== snapshot.scope.businessId) throw new Error('Source row outside requested business');
-    const id = digest(JSON.stringify([row.business_id, row.inspection_serial_num]));
+    const id = digest(JSON.stringify(jurisdiction === 'wa-king' ? [row.business_id, row.inspection_serial_num] : [jurisdiction, row.business_id, row.inspection_serial_num]));
     const fields = canonical(Object.fromEntries(Object.entries(row).filter(([key]) => !key.startsWith(':') && !key.startsWith('violation_'))));
     if (events.has(id) && events.get(id).fields !== fields) throw new Error('Conflicting inspection fields; refusing lossy grouping');
     events.set(id, { fields, businessId: row.business_id, serial: row.inspection_serial_num, date: row.inspection_date });
     const raw = canonical(row);
-    return { sourceId: row[':id'], id, raw, hash: digest(raw) };
+    return { sourceId: jurisdiction === 'wa-king' ? row[':id'] : `${jurisdiction}:${row[':id']}`, id, raw, hash: digest(raw) };
   });
   return { rows, events, scope: snapshot.scope, revision: snapshot.revision, urls: snapshot.urls };
 }

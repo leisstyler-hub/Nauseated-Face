@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 
@@ -32,9 +33,9 @@ export default function PrivacyPage() {
       <h2>Contact</h2>
       <p>
         Questions about this policy can be sent through the{" "}
-        <a href="/contact" className="font-medium text-nausea underline underline-offset-2">
+        <Link href="/contact" className="font-medium text-nausea underline underline-offset-2">
           Contact
-        </a>{" "}
+        </Link>{" "}
         page.
       </p>
     </LegalPage>

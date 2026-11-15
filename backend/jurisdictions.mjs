@@ -6,6 +6,13 @@
 // 'unavailable' (no permitted machine-readable source verified yet).
 export const JURISDICTIONS = [
   {
+    id: 'il-chicago', stateCode: 'IL', stateName: 'Illinois', name: 'Chicago',
+    healthAuthority: 'Chicago Department of Public Health',
+    sourceUrl: 'https://data.cityofchicago.org/Health-Human-Services/Food-Inspections/4ijn-s7e5',
+    scoring: { type: 'result_only', direction: 'none' },
+    coverageStatus: 'coming_soon', enabled: false, refreshFrequency: 'daily', cities: ['Chicago'],
+  },
+  {
     id: 'wa-king', stateCode: 'WA', stateName: 'Washington', name: 'King County',
     healthAuthority: 'Public Health — Seattle & King County',
     sourceUrl: 'https://data.kingcounty.gov/Health/Food-Establishment-Inspection-Data/f29f-zza5',
@@ -60,7 +67,7 @@ export async function seedJurisdictions(query) {
        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        ON CONFLICT(id) DO UPDATE SET state_code=excluded.state_code,state_name=excluded.state_name,name=excluded.name,
         health_authority=excluded.health_authority,source_url=excluded.source_url,scoring_json=excluded.scoring_json,
-        coverage_status=excluded.coverage_status,enabled=excluded.enabled,refresh_frequency=excluded.refresh_frequency`,
+        refresh_frequency=excluded.refresh_frequency`,
       [j.id, j.stateCode, j.stateName, j.name, j.healthAuthority, j.sourceUrl, JSON.stringify(j.scoring), j.coverageStatus, j.enabled, j.refreshFrequency],
     );
   }

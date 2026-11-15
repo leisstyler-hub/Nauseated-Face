@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 
@@ -28,9 +29,9 @@ export default function ContactPage() {
 
       <p>
         See our{" "}
-        <a href="/corrections" className="font-medium text-nausea underline underline-offset-2">
+        <Link href="/corrections" className="font-medium text-nausea underline underline-offset-2">
           Corrections Policy
-        </a>{" "}
+        </Link>{" "}
         for how requests are handled.
       </p>
     </LegalPage>

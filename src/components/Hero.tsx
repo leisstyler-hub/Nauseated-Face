@@ -1,10 +1,12 @@
+import Link from "next/link";
 import { Face } from "@/components/Face";
+import { SearchBox } from "@/components/SearchBox";
 export function Hero() {
   return (
     <section className="hero">
       <div className="hero-copy">
         <p className="eyebrow">
-          Seattle&apos;s Irreverent Food-Safety Watchdog.
+          America&apos;s Irreverent Food-Safety Watchdog.
         </p>
         <h1>
           Someone&apos;s Gotta
@@ -23,20 +25,25 @@ export function Hero() {
           </span>
         </h1>
         <p className="hero-description">
-          Nauseated Face turns official King County food inspection records
-          into readable rankings and stories — with a healthy dose of sarcasm, a
-          little drama, and facts that always come first.
+          Nauseated Face turns official food inspection records into readable
+          rankings and stories — with a healthy dose of sarcasm, a little
+          drama, and facts that always come first. Explore restaurant
+          inspections near you.
         </p>
+        <div className="my-2">
+          <SearchBox />
+        </div>
         <div className="hero-actions">
           <a href="#worst" className="primary-button">
             Meet this week&apos;s worst <span aria-hidden>↗</span>
           </a>
-          <a href="/methodology" className="secondary-button">
+          <Link href="/methodology" className="secondary-button">
             The facts behind the face
-          </a>
+          </Link>
         </div>
         <p className="text-xs text-muted">
-          Independent. Not affiliated with King County Public Health.
+          Independent. Not affiliated with any health department. Now serving{" "}
+          <Link href="/locations" className="text-nausea underline">verified locations</Link> — more cities on the way.
         </p>
       </div>
       <div className="hero-mascot" aria-hidden="true">
