@@ -9,7 +9,10 @@ export async function websiteProxy(request, readEnabled) {
   if (path === '/maintenance') headers.set('x-nf-maintenance', '1');
   if (bypassMaintenance(path)) return NextResponse.next({ request: { headers } });
   let enabled;
-  try { enabled = await readEnabled(); } catch { enabled = false; }
+  try { enabled = await readEnabled(); } catch (error) {
+    console.error('Website availability read failed', { name: error?.name, code: error?.code });
+    enabled = false;
+  }
   if (enabled) return NextResponse.next({ request: { headers } });
   const responseHeaders = { 'Cache-Control': 'no-store, max-age=0', 'Retry-After': '300' };
   if (path.startsWith('/api/')) return NextResponse.json({ error: 'Nauseated Face is temporarily offline. Please try again soon.' }, { status: 503, headers: responseHeaders });
