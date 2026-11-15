@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import pg from 'pg';
 import { directPilotUrl } from './postgres-store.mjs';
 import { savedStorageEnabled, productionEnabled } from './production.mjs';
+import { migrateAdmin, migrationConfig, handleAdminRequest } from './admin-migration.mjs';
 
 export function createAdminAuth({ database = undefined, secret = '', baseURL = '', provision = false } = {}) {
   if (secret.length < 32) throw new Error('Admin session secret must be at least 32 characters');
@@ -26,13 +27,22 @@ export async function ownerSession(auth, headers) {
 }
 
 let configured;
+let migrationDatabase;
 export function getAdminAuth(env = process.env) {
   const baseURL = env.BETTER_AUTH_URL || (env.VERCEL_ENV === 'preview' && env.VERCEL_URL ? `https://${env.VERCEL_URL}` : '');
   if (!savedStorageEnabled(env) || !env.BETTER_AUTH_SECRET || !baseURL) return null;
   if (!configured) {
     const schema = productionEnabled(env) ? 'nf_admin_production' : 'nf_admin_preview';
     const database = new pg.Pool({ connectionString: directPilotUrl(env), options: `-c search_path=${schema}`, max: 3, connectionTimeoutMillis: 10000, idleTimeoutMillis: 10000 });
+    migrationDatabase = database;
     configured = createAdminAuth({ database, secret: env.BETTER_AUTH_SECRET, baseURL });
   }
   return configured;
+}
+
+export async function adminRequest(request, env = process.env) {
+  const auth = getAdminAuth(env);
+  if (!auth) return Response.json({ error: 'Administrator sign-in is not configured' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  const config = migrationConfig(env);
+  return handleAdminRequest(request, auth, config ? credentials => migrateAdmin({ database: migrationDatabase, config, credentials }) : null);
 }
