@@ -113,7 +113,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
         and reinspections exist for a reason. Every record links to its original source.
       </p>
 
-      <InspectionHistoryChart inspections={profile.inspections} violationPoints={profile.jurisdiction?.scoring.type === "violation_points"}/>
+      <InspectionHistoryChart inspections={profile.inspections.map(inspection=>({...inspection,reportHref:profile.jurisdiction?.id==='wa-king'&&inspection.inspectionDate?inspectionPath({businessId:inspection.businessId,serialNum:inspection.serial,inspectionDate:inspection.inspectionDate}):inspection.sourceUrl}))} violationPoints={profile.jurisdiction?.scoring.type === "violation_points"}/>
       <h2 className="text-xl font-bold">Inspection timeline</h2>
       <p className="mt-3 text-sm leading-7 text-muted">{profile.inspections.length} saved inspections{profile.inspections.at(-1)?.inspectionDate && latest?.inspectionDate ? `, ${formatInspectionDate(profile.inspections.at(-1)!.inspectionDate!)} to ${formatInspectionDate(latest.inspectionDate)}` : ''}. This includes historical records available from the published source.</p>
       <ol className="mt-4 flex flex-col gap-4">

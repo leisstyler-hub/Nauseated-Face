@@ -1,4 +1,4 @@
-import {loadInspectionDesk} from '@/components/InspectionDeskSection';
+import {loadInspectionDesk} from '@/lib/inspection-desk';
 export async function GET(request:Request){
  const url=new URL(request.url),category=url.searchParams.get('category'),offset=Number(url.searchParams.get('offset'));
  if(!['monthly','red','repeats','closures','violations'].includes(category??'')||!Number.isSafeInteger(offset)||offset<0||offset>100000)return Response.json({error:'Invalid category page'},{status:400});

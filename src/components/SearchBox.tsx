@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -14,7 +14,7 @@ interface Suggestion {
   matchScope?: string;
 }
 
-export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", state = "", city = "", jurisdiction = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; state?: string; city?: string; jurisdiction?: string }) {
+export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", clearOnNavigate = false, state = "", city = "", jurisdiction = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; clearOnNavigate?: boolean; state?: string; city?: string; jurisdiction?: string }) {
   const [query, setQuery] = useState(initialQuery);
   const [interacted, setInteracted] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -23,6 +23,30 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
   const router = useRouter();
   const listId = useId();
   const boxRef = useRef<HTMLDivElement>(null);
+  const reset = useCallback(() => {
+    setQuery(""); setSuggestions([]); setActive(-1); setOpenList(false); setInteracted(false);
+  }, []);
+  useEffect(() => {
+    if (!clearOnNavigate) return;
+    const onNavigation = (event: MouseEvent) => {
+      if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      if (link && link.getAttribute('target') !== '_blank') reset();
+    };
+    // Clear before leaving as well as on history restoration: the router and
+    // browser may preserve this homepage tree instead of remounting the input.
+    document.addEventListener('click', onNavigation, true);
+    window.addEventListener('pagehide', reset);
+    window.addEventListener('pageshow', reset);
+    window.addEventListener('popstate', reset);
+    return () => {
+      document.removeEventListener('click', onNavigation, true);
+      window.removeEventListener('pagehide', reset);
+      window.removeEventListener('pageshow', reset);
+      window.removeEventListener('popstate', reset);
+    };
+  }, [clearOnNavigate, reset]);
+
 
   useEffect(() => {
     if (!interacted) return;
@@ -36,7 +60,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
         const res = await fetch(`/api/search?${new URLSearchParams({ q, limit: "6", state, city, jurisdiction })}`, { signal: controller.signal });
         if (!res.ok) return;
         const data = await res.json();
-        if (Array.isArray(data.results)) {
+        if (!controller.signal.aborted && Array.isArray(data.results)) {
           setSuggestions(data.results);
           setActive(-1);
           setOpenList(true);
@@ -67,7 +91,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
           event.preventDefault();
           const q = query.trim();
           if (q) {
-            setOpenList(false);
+            if (clearOnNavigate) reset(); else setOpenList(false);
             router.push(`/search?${new URLSearchParams({ q, state, city, jurisdiction })}`);
           }
         }}
@@ -86,7 +110,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
               if (event.key === "Escape") setOpenList(false);
               if (event.key === "ArrowDown" && suggestions.length) { event.preventDefault(); setOpenList(true); setActive(a => (a + 1) % suggestions.length); }
               if (event.key === "ArrowUp" && suggestions.length) { event.preventDefault(); setOpenList(true); setActive(a => (a <= 0 ? suggestions.length : a) - 1); }
-              if (event.key === "Enter" && openList && active >= 0 && suggestions[active]) { event.preventDefault(); const s = suggestions[active]; setOpenList(false); router.push(`/restaurants/${s.stateSlug}/${s.slug}`); }
+              if (event.key === "Enter" && openList && active >= 0 && suggestions[active]) { event.preventDefault(); const s = suggestions[active]; if (clearOnNavigate) reset(); else setOpenList(false); router.push(`/restaurants/${s.stateSlug}/${s.slug}`); }
             }}
             placeholder={placeholder}
             autoFocus={autoFocus}

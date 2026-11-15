@@ -31,7 +31,7 @@ export async function Hero() {
           Nauseated Face turns official food inspection records into clear, readable rankings. We care where we eat, and we know you do too. Facts come first. Explore restaurant inspections near you.
         </p>
         <div className="my-2">
-          <SearchBox state={area.stateCode} city={area.city} jurisdiction={area.jurisdictionId} />
+          <SearchBox clearOnNavigate state={area.stateCode} city={area.city} jurisdiction={area.jurisdictionId} />
         </div>
         <div className="hero-actions">
           {area.selected ? <a href="#worst" className="primary-button">
