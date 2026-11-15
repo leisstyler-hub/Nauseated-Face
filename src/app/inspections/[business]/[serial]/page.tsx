@@ -39,7 +39,7 @@ export default async function InspectionPage({ params, searchParams }: {
       </section>
       <footer className="mt-10 rounded-xl border border-card-border p-5 text-sm">
         <h2 className="font-bold">Straight from the public record</h2>
-        <p className="mt-2 text-muted">{saved ? `Saved county record${observedAt ? `; observed ${formatInspectionDate(observedAt)}` : ''}. Saved coverage is a limited sample.` : 'Official King County source, cached for up to 15 minutes.'} Descriptions are shown as recorded.</p>
+        <p className="mt-2 text-muted">{saved ? `Saved county record${observedAt ? `; observed ${formatInspectionDate(observedAt)}` : ''}. Published history may not include every inspection ever performed.` : 'Official King County source, cached for up to 15 minutes.'} Descriptions are shown as recorded.</p>
         <dl className="my-4 space-y-2 break-all text-xs text-muted"><div><dt className="font-bold">Business ID</dt><dd>{business}</dd></div><div><dt className="font-bold">Inspection ID</dt><dd>{serial}</dd></div></dl>
         <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-nausea underline underline-offset-4">View original King County record <span aria-hidden>↗</span></a>
       </footer>

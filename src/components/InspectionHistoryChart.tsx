@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import {useId,useState} from 'react';
 import {historyPoints,officialResultTone,type HistoryInspection} from '@/lib/inspection-history';
 import {OfficialResultBadge} from './OfficialResultBadge';
@@ -22,4 +22,3 @@ export function InspectionHistoryChart({inspections,violationPoints}:{inspection
   <div aria-live="polite" className="mt-4 flex flex-wrap items-center gap-3 text-sm"><OfficialResultBadge result={active.result}/><span>{violationPoints?(active.score===null?'Points not recorded':`${active.score} violation points`):active.type}</span><a href={`#inspection-${active.id}`} className="font-semibold text-nausea underline">View this inspection</a></div>
  </section>;
 }
-
