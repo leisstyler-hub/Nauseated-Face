@@ -1,0 +1,28 @@
+{
+  "verifiedAt": "2026-11-15T03:29:42.847Z",
+  "environment": "Disposable local PGlite; no Neon or production changes",
+  "source": {
+    "origin": "https://data.montgomerycountymd.gov",
+    "dataset": "dkrp-gr48",
+    "dateField": "inspection_start_date",
+    "idField": "inspection_number"
+  },
+  "revision": "1794634341",
+  "urls": [
+    "https://data.montgomerycountymd.gov/api/views/dkrp-gr48.json",
+    "https://data.montgomerycountymd.gov/resource/dkrp-gr48.json?%24order=inspection_start_date+DESC%2Cinspection_number+DESC&%24limit=25&%24offset=0"
+  ],
+  "sampleRows": 25,
+  "exactOriginalParity": true,
+  "repeatChanges": 0,
+  "cityAndNameSearch": true,
+  "profileHistory": true,
+  "failureRetention": true,
+  "publicActivation": false,
+  "limitations": [
+    "25 recent inspections, not complete county coverage",
+    "Checklist exceptions and corrected-onsite values retained verbatim; no numeric scores or inferred severity",
+    "Source starts July 2024; other food facilities are included alongside restaurants",
+    "Hosted import and publication remain pending"
+  ]
+}

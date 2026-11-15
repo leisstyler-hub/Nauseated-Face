@@ -15,6 +15,16 @@ export default function PrivacyPage() {
         exactly what is collected and why, before the feature goes live.
       </p>
 
+      <h2>Optional location sharing</h2>
+      <p>
+        If you tap Use my location, your browser asks permission to provide your
+        location. Coordinates are used only in your browser to suggest cities
+        near imported inspection records. We do not send these coordinates to
+        our server or save them. Choosing a city saves that city in your
+        browser&apos;s local storage so it can be remembered on future visits.
+        You can always select a city manually without sharing your location.
+      </p>
+
       <h2>Business and inspection data</h2>
       <p>
         Inspection records shown on this site concern businesses, not

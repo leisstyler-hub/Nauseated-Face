@@ -107,8 +107,8 @@ export class PostgresStore {
     return rows.map(r => ({ stateCode: r.state_code, slug: r.slug }));
   }
   async coveredCities() {
-    const rows = await query(this.pool, 'SELECT state_code, city, jurisdiction_id, count(*) AS n FROM nf_preview.establishments WHERE city IS NOT NULL GROUP BY state_code, city, jurisdiction_id ORDER BY state_code, lower(city)');
-    return rows.map(r => ({ stateCode: r.state_code, city: r.city, jurisdictionId: r.jurisdiction_id, establishmentCount: Number(r.n) }));
+    const rows = await query(this.pool, 'SELECT state_code, city, jurisdiction_id, count(*) AS n, avg(latitude) FILTER (WHERE latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180 AND latitude <> 0 AND longitude <> 0) AS latitude, avg(longitude) FILTER (WHERE latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180 AND latitude <> 0 AND longitude <> 0) AS longitude FROM nf_preview.establishments WHERE city IS NOT NULL GROUP BY state_code, city, jurisdiction_id ORDER BY state_code, lower(city)');
+    return rows.map(r => ({ stateCode: r.state_code, city: r.city, jurisdictionId: r.jurisdiction_id, establishmentCount: Number(r.n), latitude: r.latitude === null ? null : Number(r.latitude), longitude: r.longitude === null ? null : Number(r.longitude) }));
   }
   async establishmentBySlug(stateCode, slug) {
     const [row] = await query(this.pool, `SELECT * FROM nf_preview.establishments WHERE ${PUBLISHED} AND state_code=$1 AND slug=$2`, [stateCode.toUpperCase(), slug]);

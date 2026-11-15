@@ -20,6 +20,8 @@ export async function SiteHeader() {
       slug: city.slug,
       statusLabel: STATUS_LABEL[city.status],
       covered: city.covered,
+      latitude: city.latitude,
+      longitude: city.longitude,
     })),
   }));
   return (

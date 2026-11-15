@@ -21,6 +21,8 @@ export interface CityEntry {
   healthAuthority: string;
   sourceUrl: string;
   covered: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface StateEntry {
@@ -64,7 +66,7 @@ const registry = JURISDICTIONS as JurisdictionDef[];
 // jurisdiction registry, never from hardcoded frontend lists.
 export const getStates = cache(async (): Promise<StateEntry[]> => {
   await connection();
-  let covered: {stateCode: string; city: string; jurisdictionId: string; establishmentCount: number}[] = [];
+  let covered: {stateCode: string; city: string; jurisdictionId: string; establishmentCount: number; latitude: number | null; longitude: number | null}[] = [];
   let catalog: {id: string; enabled: boolean; coverageStatus: CoverageStatus}[] = [];
   try { [covered, catalog] = await withStore(store => Promise.all([store.coveredCities(), store.catalog()]), [[], []]); } catch { /* Coverage fails closed. */ }
 
@@ -90,6 +92,8 @@ export const getStates = cache(async (): Promise<StateEntry[]> => {
         healthAuthority: j.healthAuthority,
         sourceUrl: j.sourceUrl,
         covered: hasRecords,
+        latitude: covered.find(c => c.jurisdictionId === j.id && c.city.toLowerCase() === name.toLowerCase())?.latitude ?? null,
+        longitude: covered.find(c => c.jurisdictionId === j.id && c.city.toLowerCase() === name.toLowerCase())?.longitude ?? null,
       });
     }
     states.set(j.stateCode, state);

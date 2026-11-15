@@ -21,6 +21,21 @@ const open = async () => {
   return { db, store };
 };
 
+test('city proximity summaries retain only valid imported coordinates', async () => {
+  const { db, store } = await open();
+  try {
+    await importPostgres(store, source([
+      row('geo1', 'geo1', 'geo1', { latitude: '47.6', longitude: '-122.3' }),
+      row('geo2', 'geo2', 'geo2', { latitude: '47.8', longitude: '-122.5' }),
+      row('geo3', 'geo3', 'geo3', { latitude: '', longitude: '' }),
+    ]), { type: 'all' });
+    const [city] = await store.coveredCities();
+    assert.equal(city.establishmentCount, 3);
+    assert.ok(Math.abs(city.latitude - 47.7) < 0.00001);
+    assert.ok(Math.abs(city.longitude + 122.4) < 0.00001);
+  } finally { await db.close(); }
+});
+
 test('migration seeds the jurisdiction catalog and only verified markets are enabled', async () => {
   const { db, store } = await open();
   try {

@@ -6,7 +6,7 @@ import { importPostgres } from './postgres-store.mjs';
 export async function runNationalPilot(store) {
   await store.migrate();
   const results = [];
-  for (const id of ['wa-king', 'il-chicago']) {
+  for (const id of ['wa-king', 'il-chicago', 'md-montgomery']) {
     const scope = { type: 'latest', limit: id === 'wa-king' ? 5 : 25 };
     const snapshot = await ADAPTERS[id].createSource().snapshot(scope);
     assert.ok(snapshot.rows.length, 'No records returned; keep location inactive');

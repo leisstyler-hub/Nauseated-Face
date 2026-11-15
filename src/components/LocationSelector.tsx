@@ -3,12 +3,15 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { nearbyCities } from "@/lib/nearby";
 
 export interface SelectorCity {
   name: string;
   slug: string;
   statusLabel: string;
   covered: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface SelectorState {
@@ -29,6 +32,9 @@ const getSnapshot = () => { try { return window.localStorage.getItem(STORAGE_KEY
 export function LocationSelector({ states }: { states: SelectorState[] }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [locationMessage, setLocationMessage] = useState("");
+  const [nearby, setNearby] = useState<(SelectorCity & { state: SelectorState; miles: number })[]>([]);
   const saved = useSyncExternalStore(subscribe, getSnapshot, () => null);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -72,6 +78,29 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
     setOpen(false);
   };
 
+  const locate = () => {
+    setNearby([]);
+    if (!navigator.geolocation) {
+      setLocationMessage("Location sharing is unavailable in this browser. Choose a city below.");
+      return;
+    }
+    setLocating(true);
+    setLocationMessage("Waiting for location permission...");
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      setLocating(false);
+      if (!Number.isFinite(coords.accuracy) || coords.accuracy > 80000) {
+        setLocationMessage("Your location is too approximate to suggest nearby records. Choose a city below.");
+        return;
+      }
+      const matches = nearbyCities(coords.latitude, coords.longitude, states.flatMap(state => state.cities.map(city => ({ ...city, state }))));
+      setNearby(matches);
+      setLocationMessage(matches.length ? "Nearby cities with records (within about 50 miles). Coverage may be limited." : "No verified records within about 50 miles yet. You can explore other cities below.");
+    }, (error) => {
+      setLocating(false);
+      setLocationMessage(error.code === 1 ? "Location permission was not granted. You can still choose a city below." : "We could not get your location. Try again or choose a city below.");
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+  };
+
   const needle = filter.trim().toLowerCase();
   const filtered = states
     .map((state) => ({
@@ -103,6 +132,14 @@ export function LocationSelector({ states }: { states: SelectorState[] }) {
           id={listId}
           className="absolute right-0 z-50 mt-2 max-h-[70vh] w-72 overflow-y-auto rounded-xl border border-card-border bg-background p-3 shadow-2xl sm:w-80"
         >
+          <button type="button" onClick={locate} disabled={locating} className="mb-1 w-full rounded-lg border border-nausea/40 bg-nausea/10 px-3 py-2 text-sm font-semibold text-nausea disabled:opacity-60">
+            {locating ? "Finding nearby records..." : "Use my location"}
+          </button>
+          <p className="mb-3 text-xs text-muted">Optional. Your browser asks permission. Coordinates stay in your browser; only your chosen city is remembered.</p>
+          <p role="status" className="mb-2 text-xs text-muted">{locationMessage}</p>
+          {nearby.map(city => <Link key={`${city.state.code}-${city.slug}`} href={`/${city.state.slug}/${city.slug}`} onClick={() => pick(city.state, city)} className="mb-2 block rounded-lg border border-nausea/30 px-3 py-2 text-sm text-nausea">
+            {city.name}, {city.state.code} <span className="block text-xs text-muted">{city.statusLabel} · about {Math.round(city.miles)} miles from imported records</span>
+          </Link>)}
           <label className="sr-only" htmlFor={`${listId}-filter`}>
             Search locations
           </label>
