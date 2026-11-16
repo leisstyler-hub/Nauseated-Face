@@ -139,7 +139,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
                   Full record with every violation
                 </Link>
               )}
-              <a href={inspection.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-muted underline underline-offset-2">
+              <a data-traffic-action="official_source_click" href={inspection.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-muted underline underline-offset-2">
                 Official source <span aria-hidden>↗</span>
               </a>
             </div>

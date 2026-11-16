@@ -16,7 +16,7 @@ export default async function InspectionPage({ params, searchParams }: {
   let detail;
   try { detail = await getInspectionDetail(business, serial, date); }
   catch {
-    return <section className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6"><Link href="/inspections" className="text-nausea underline">Back to inspections</Link><h1 className="mt-8 text-3xl font-extrabold">Inspection temporarily unavailable</h1><p className="my-5 text-muted">We could not load the complete record. Please try again or check the official county source.</p><a href={SOURCE_DATASET_URL} className="text-nausea underline">Open King County records</a></section>;
+    return <section className="mx-auto w-full max-w-4xl px-4 py-14 sm:px-6"><Link href="/inspections" className="text-nausea underline">Back to inspections</Link><h1 className="mt-8 text-3xl font-extrabold">Inspection temporarily unavailable</h1><p className="my-5 text-muted">We could not load the complete record. Please try again or check the official county source.</p><a data-traffic-action="official_source_click" href={SOURCE_DATASET_URL} className="text-nausea underline">Open King County records</a></section>;
   }
   const { event, saved, observedAt } = detail;
   if (!event) notFound();
@@ -40,7 +40,7 @@ export default async function InspectionPage({ params, searchParams }: {
         <h2 className="font-bold">Straight from the public record</h2>
         <p className="mt-2 text-muted">{saved ? `Saved county record${observedAt ? `; observed ${formatInspectionDate(observedAt)}` : ''}. Published history may not include every inspection ever performed.` : 'Official King County source, cached for up to 15 minutes.'} Descriptions are shown as recorded.</p>
         <dl className="my-4 space-y-2 break-all text-xs text-muted"><div><dt className="font-bold">Business ID</dt><dd>{business}</dd></div><div><dt className="font-bold">Inspection ID</dt><dd>{serial}</dd></div></dl>
-        <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-nausea underline underline-offset-4">View original King County record <span aria-hidden>↗</span></a>
+        <a data-traffic-action="official_source_click" href={sourceUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-nausea underline underline-offset-4">View original King County record <span aria-hidden>↗</span></a>
       </footer>
     </article>
   );

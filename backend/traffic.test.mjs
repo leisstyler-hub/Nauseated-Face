@@ -59,3 +59,77 @@ test('public collector validates origin and payload before writing; excluded bro
  const ok=await trafficRequest(request(body),key,record);assert.equal(ok.status,204);assert.match(ok.headers.get('set-cookie'),/HttpOnly/);assert.match(ok.headers.get('set-cookie'),/Secure/);assert.equal(calls,1);
  const failed=await trafficRequest(request(body),key,async()=>{throw Error('private');});assert.equal(failed.status,503);assert.equal(failed.headers.get('set-cookie'),null);
 });
+
+test('ranking routes are distinct from city pages',()=>{
+ assert.equal(pageCategory('/rankings/most-violations'),'ranking');
+ assert.equal(pageCategory('/washington/seattle'),'city');
+});
+
+test('growth dimensions and actions preserve page counts and mature return cohorts',async()=>{
+ const db=new PGlite();
+ try{
+  await db.exec(TRAFFIC_SCHEMA);
+  await db.query("UPDATE traffic_meta SET collection_started='2026-10-01T07:00:00Z'");
+  const add=(i,at,extra={})=>recordPageView(db,{visitorId:visitor,eventId:event(i),category:'search',at:new Date(at),...extra});
+  await add(100,'2026-11-01T18:00:00Z',{area:'wa/seattle',content:'/restaurants/washington/example',device:'phone',source:'search'});
+  await add(101,'2026-11-02T18:00:00Z');
+  await add(102,'2026-11-09T18:00:00Z',{action:'search_results'});
+  await add(103,'2026-11-09T18:01:00Z',{action:'search_result_click'});
+  await add(104,'2026-11-09T18:02:00Z',{category:'restaurant'});
+  await add(105,'2026-11-09T18:03:00Z',{category:'restaurant',action:'full_report_click'});
+  await add(105,'2026-11-09T18:03:01Z',{action:'full_report_click'});
+  const r=await trafficReport(db,'30',new Date('2026-11-15T20:00:00Z'));
+  assert.equal(r.pageviews,3);assert.equal(r.clicks,2);
+  assert.equal(r.breakdowns.areas.find(x=>x.label==='wa/seattle').pageviews,1);
+  assert.equal(r.breakdowns.devices.find(x=>x.label==='phone').visitors,1);
+  assert.deepEqual(r.retention.map(x=>[x.days,x.eligible,x.returned]),[[1,1,1],[7,1,1],[30,0,0]]);
+  assert.deepEqual(r.journey.map(x=>x.visits),[1,1,1,1]);
+  assert.equal(r.comparison.available,false);
+ }finally{await db.close();}
+});
+
+test('collector rejects malformed dimensions and excludes Neon administrators',async()=>{
+ const key='synthetic-traffic-key-of-at-least-32-characters';let calls=0;
+ const req=body=>new Request('https://site.test/api/traffic',{method:'POST',headers:{origin:'https://site.test','content-type':'application/json'},body:JSON.stringify(body)});
+ for(const extra of [{area:null},{content:'/admin/reset-token'},{source:'https://private.test/?email=x'},{action:'password_submit'},{device:'fingerprint'},{query:'private'}]){
+  assert.equal((await trafficRequest(req({eventId:event(200),category:'home',...extra}),key,async()=>calls++)).status,400);
+ }
+ assert.equal((await trafficRequest(req(null),key,async()=>calls++)).status,400);
+ assert.equal(excludedTraffic(new Headers({cookie:'__Secure-neon-auth.session_token=test'})),true);
+ assert.equal(calls,0);
+});
+
+test('return cohorts include later calendar-day activity within one session and mature only after complete days',async()=>{
+ const db=new PGlite();try{
+  await db.exec(TRAFFIC_SCHEMA);
+  await recordPageView(db,{visitorId:visitor,eventId:event(301),category:'home',at:new Date('2026-11-02T07:55:00Z')});
+  await recordPageView(db,{visitorId:visitor,eventId:event(302),category:'home',at:new Date('2026-11-02T08:05:00Z')});
+  let r=await trafficReport(db,'7',new Date('2026-11-03T08:00:00Z'));
+  assert.deepEqual(r.retention[0],{days:1,eligible:1,returned:1});
+  r=await trafficReport(db,'7',new Date('2026-11-02T20:00:00Z'));
+  assert.equal(r.retention[0].eligible,0);
+ }finally{await db.close();}
+});
+
+test('growth uses matched Pacific elapsed calendar periods across DST and retains legacy history',async()=>{
+ const db=new PGlite();try{
+  await db.exec(TRAFFIC_SCHEMA);await db.exec(TRAFFIC_SCHEMA);
+  await db.query("UPDATE traffic_meta SET collection_started='2026-10-01T07:00:00Z'");
+  for(const [i,at] of [[401,'2026-10-31T19:59:00Z'],[402,'2026-10-31T20:01:00Z'],[403,'2026-11-01T19:59:00Z']])await recordPageView(db,{visitorId:visitor,eventId:event(i),category:'home',at:new Date(at)});
+  const r=await trafficReport(db,'today',new Date('2026-11-01T20:00:00Z'));
+  assert.equal(r.comparison.start,'2026-10-31T07:00:00.000Z');
+  assert.equal(r.comparison.end,'2026-10-31T19:00:00.000Z');
+  assert.equal(r.comparison.available,true);assert.equal(r.comparison.pageviews,0);
+  assert.equal(r.pageviews,1);
+ }finally{await db.close();}
+});
+
+test('30-day retention remains measurable when the activity range is today',async()=>{
+ const db=new PGlite();try{
+  await db.exec(TRAFFIC_SCHEMA);
+  await recordPageView(db,{visitorId:visitor,eventId:event(501),category:'home',at:new Date('2026-10-01T18:00:00Z')});
+  await recordPageView(db,{visitorId:visitor,eventId:event(502),category:'home',at:new Date('2026-10-31T18:00:00Z')});
+  const r=await trafficReport(db,'today',new Date('2026-11-15T20:00:00Z'));
+  assert.deepEqual(r.retention[2],{days:30,eligible:1,returned:1});
+ }finally{await db.close();}
+});

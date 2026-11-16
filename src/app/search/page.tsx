@@ -1,6 +1,7 @@
 import { getHomeArea } from "@/lib/home-area";
 import Link from "next/link";
 import type { Metadata } from "next";
+import {SearchMeasurement} from "@/components/SearchMeasurement";
 import { SearchBox } from "@/components/SearchBox";
 import { EstablishmentCard } from "@/components/EstablishmentCard";
 import { getStates, searchEstablishments, searchAcrossCities } from "@/lib/locations";
@@ -66,6 +67,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       )}
       {!failed && q.trim().length >= 2 && (
         <>
+          {!expansionFailed&&<SearchMeasurement key={`${q}-${state}-${city}-${page}-${sort}`} empty={results.length===0&&elsewhere.length===0}/>}
           <h2 className="mt-10 text-xl font-bold">
             {results.length === 0 ? city ? `No matches in ${city}` : "No matches in this search" : `${results.length} result${results.length === 1 ? "" : "s"} on this page`}
             <span className="ml-2 text-sm font-normal text-muted">for “{q.trim()}”</span>

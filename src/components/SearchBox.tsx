@@ -4,6 +4,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import {trackTraffic} from '@/lib/traffic-client';
+
 interface Suggestion {
   name: string;
   city: string | null;
@@ -62,6 +64,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
         const data = await res.json();
         if (!controller.signal.aborted && Array.isArray(data.results)) {
           setSuggestions(data.results);
+          trackTraffic(data.results.length?'search_results':'search_empty');
           setActive(-1);
           setOpenList(true);
         }
@@ -91,6 +94,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
           event.preventDefault();
           const q = query.trim();
           if (q) {
+            trackTraffic('search_submit');
             if (clearOnNavigate) reset(); else setOpenList(false);
             router.push(`/search?${new URLSearchParams({ q, state, city, jurisdiction })}`);
           }
@@ -110,7 +114,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
               if (event.key === "Escape") setOpenList(false);
               if (event.key === "ArrowDown" && suggestions.length) { event.preventDefault(); setOpenList(true); setActive(a => (a + 1) % suggestions.length); }
               if (event.key === "ArrowUp" && suggestions.length) { event.preventDefault(); setOpenList(true); setActive(a => (a <= 0 ? suggestions.length : a) - 1); }
-              if (event.key === "Enter" && openList && active >= 0 && suggestions[active]) { event.preventDefault(); const s = suggestions[active]; if (clearOnNavigate) reset(); else setOpenList(false); router.push(`/restaurants/${s.stateSlug}/${s.slug}`); }
+              if (event.key === "Enter" && openList && active >= 0 && suggestions[active]) { event.preventDefault(); const s = suggestions[active]; trackTraffic('search_result_click',`/restaurants/${s.stateSlug}/${s.slug}`); if (clearOnNavigate) reset(); else setOpenList(false); router.push(`/restaurants/${s.stateSlug}/${s.slug}`); }
             }}
             placeholder={placeholder}
             autoFocus={autoFocus}
