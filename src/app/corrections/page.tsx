@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 
@@ -14,9 +15,9 @@ export default function CorrectionsPage() {
       <h2>How to request a correction</h2>
       <p>
         Use the{" "}
-        <a href="/contact" className="font-medium text-nausea underline underline-offset-2">
+        <Link href="/contact" className="font-medium text-nausea underline underline-offset-2">
           Contact / Right to Respond
-        </a>{" "}
+        </Link>{" "}
         page. Include the business name, the page URL, and what you believe
         is inaccurate. If you are a business owner or operator disputing an
         inspection record itself, we will point you to the official King

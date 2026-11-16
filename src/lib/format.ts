@@ -1,11 +1,13 @@
 export function formatInspectionDate(iso: string): string {
-  const d = new Date(iso);
+  // Socrata floating timestamps represent a calendar date, not a UTC instant.
+  const floating = /^\d{4}-\d{2}-\d{2}(?:T[\d:.]+)?$/.test(iso);
+  const d = new Date(floating ? `${iso.slice(0, 10)}T12:00:00Z` : iso);
   if (Number.isNaN(d.getTime())) return iso;
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
-    timeZone: "America/Los_Angeles",
+    timeZone: floating ? "UTC" : "America/Los_Angeles",
   }).format(d);
 }
 

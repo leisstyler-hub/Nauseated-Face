@@ -1,24 +1,41 @@
-import { Suspense } from "react";
+import { getHomeArea } from "@/lib/home-area";
 import { Hero } from "@/components/Hero";
+import { TickerSection } from "@/components/TickerSection";
+import { Suspense } from "react";
+import { Intro } from "@/components/Intro";
 import { InspectionFeedSection } from "@/components/InspectionFeedSection";
 import { FeedSkeleton } from "@/components/FeedSkeleton";
-import { CategoryGrid } from "@/components/CategoryGrid";
+import { InspectionDeskSection } from "@/components/InspectionDeskSection";
 import { NewsletterTeaser } from "@/components/NewsletterTeaser";
 import { AdSlot } from "@/components/AdSlot";
+import { RecordLoader } from "@/components/RecordLoader";
+import { LocationPrompt } from "@/components/LocationPrompt";
 
-export default function Home() {
+export default async function Home() {
+  const area = await getHomeArea();
   return (
     <>
-      <Hero />
+      <Intro />
+      <Suspense
+        key={`ticker-${area.key}`}
+        fallback={
+          <div className="ticker px-4 py-3 text-xs text-muted">
+            <RecordLoader compact />
+          </div>
+        }
+      >
+        <TickerSection />
+      </Suspense>
+      <Suspense fallback={<div className="hero"><RecordLoader /></div>}><Hero /></Suspense>
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
         <AdSlot kind="top-leaderboard" />
       </div>
 
-      <Suspense fallback={<FeedSkeleton />}>
+      {area.selected ? <Suspense key={`feed-${area.key}`} fallback={<FeedSkeleton />}>
         <InspectionFeedSection />
-      </Suspense>
+      </Suspense> : <LocationPrompt/>}
 
-      <CategoryGrid />
+      {area.selected && <Suspense key={`desk-${area.key}`} fallback={<section className="categories"><RecordLoader /></section>}><InspectionDeskSection /></Suspense>}
       <NewsletterTeaser />
     </>
   );

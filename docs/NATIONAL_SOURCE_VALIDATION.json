@@ -1,0 +1,74 @@
+{
+  "verifiedAt": "2026-11-15T01:44:43.837Z",
+  "environment": "isolated local PGlite; not hosted Neon",
+  "results": [
+    {
+      "jurisdictionId": "wa-king",
+      "first": {
+        "runId": 1,
+        "rowCount": 18,
+        "changedCount": 18,
+        "scope": {
+          "type": "latest",
+          "limit": 5
+        },
+        "revision": "1794669500"
+      },
+      "repeat": {
+        "runId": 2,
+        "rowCount": 18,
+        "changedCount": 0,
+        "scope": {
+          "type": "latest",
+          "limit": 5
+        },
+        "revision": "1794669500"
+      },
+      "comparedRows": 18,
+      "sourceFailureRetainedRecords": true,
+      "searchVerified": true,
+      "profileSlug": "hattie-s-hat-04f17e7036034ae6b1a33394eac7d89fba5910afd6bca88c7287f05766a84402",
+      "sourceUrls": [
+        "https://data.kingcounty.gov/api/views/r878-4sxa.json",
+        "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=business_id%2Cinspection_serial_num%2Cmax%28inspection_date%29+AS+latest_date&%24group=business_id%2Cinspection_serial_num&%24order=latest_date+DESC%2Cbusiness_id%2Cinspection_serial_num&%24limit=5",
+        "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3126899%27+AND+inspection_serial_num%3D%27PFE-RT-126433-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+        "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3127154%27+AND+inspection_serial_num%3D%27PFE-RT-140951-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+        "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3127836%27+AND+inspection_serial_num%3D%27PFE-RT-0458171-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+        "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3127911%27+AND+inspection_serial_num%3D%27PFE-RT-0458173-2026%27&%24order=%3Aid&%24limit=1000&%24offset=0",
+        "https://data.kingcounty.gov/resource/r878-4sxa.json?%24select=*%2C+%3Aid&%24where=business_id%3D%27PFE-PR-3128231%27+AND+inspection_serial_num%3D%27PFE-RT-0458131-2025%27&%24order=%3Aid&%24limit=1000&%24offset=0"
+      ]
+    },
+    {
+      "jurisdictionId": "il-chicago",
+      "first": {
+        "runId": 5,
+        "rowCount": 25,
+        "changedCount": 25,
+        "scope": {
+          "type": "latest",
+          "limit": 25
+        },
+        "revision": "1794650821"
+      },
+      "repeat": {
+        "runId": 6,
+        "rowCount": 25,
+        "changedCount": 0,
+        "scope": {
+          "type": "latest",
+          "limit": 25
+        },
+        "revision": "1794650821"
+      },
+      "comparedRows": 25,
+      "sourceFailureRetainedRecords": true,
+      "searchVerified": true,
+      "profileSlug": "takos-el-general-40569c0086c38605649b145df40302993b08b97298d990329ae0678ae4571f41",
+      "sourceUrls": [
+        "https://data.cityofchicago.org/api/views/4ijn-s7e5.json",
+        "https://data.cityofchicago.org/resource/4ijn-s7e5.json?%24order=inspection_date+DESC%2Cinspection_id+DESC&%24limit=25&%24offset=0"
+      ]
+    }
+  ],
+  "coverage": "Bounded recent samples; no complete jurisdiction or establishment history implied."
+}

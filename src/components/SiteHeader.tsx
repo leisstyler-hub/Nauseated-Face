@@ -1,25 +1,45 @@
+import { getHomeArea } from "@/lib/home-area";
+import { Face } from "@/components/Face";
 import Link from "next/link";
+import { LocationSelector, type SelectorState } from "@/components/LocationSelector";
+import { STATUS_LABEL, getStates, getSourceCoverage } from "@/lib/locations";
 
 const NAV_LINKS = [
-  { href: "/#latest", label: "Latest" },
+  { href: "/search", label: "Search" },
   { href: "/#rankings", label: "Rankings" },
-  { href: "/methodology", label: "Methodology" },
+  { href: "/locations", label: "Cities" },
   { href: "/about", label: "About" },
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const area = await getHomeArea();
+  const source = (await getSourceCoverage().catch(()=>[])).find(s=>s.id==="wa-king");
+  const states: SelectorState[] = (await getStates()).map((state) => ({
+    code: state.code,
+    name: state.name,
+    slug: state.slug,
+    cities: state.cities.map((city) => ({
+      name: city.name,
+      slug: city.slug,
+      statusLabel: STATUS_LABEL[city.status],
+      covered: city.covered,
+      inspectionCount: city.inspectionCount,
+      latitude: city.latitude,
+      longitude: city.longitude,
+    })),
+  }));
   return (
     <header className="sticky top-0 z-40 border-b border-card-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <Link href="/" aria-label="Nauseated Face home" className="flex items-center gap-2">
           <span className="text-2xl sm:text-3xl" aria-hidden>
-            🤢
+            <Face />
           </span>
-          <span className="text-base font-extrabold tracking-tight sm:text-lg">
+          <span className="hidden text-base font-extrabold tracking-tight min-[400px]:inline sm:text-lg">
             Nauseated Face
           </span>
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium text-muted sm:flex">
+        <nav className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -30,12 +50,16 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link
-          href="/#latest"
-          className="rounded-full bg-nausea px-4 py-2 text-sm font-bold text-background transition-opacity hover:opacity-90 sm:hidden"
-        >
-          Latest
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/search"
+            aria-label="Search restaurants"
+            className="rounded-full border border-card-border bg-card px-3 py-1.5 text-sm font-semibold transition-colors hover:border-nausea md:hidden"
+          >
+            <span aria-hidden>🔍</span>
+          </Link>
+          <LocationSelector states={states} initialArea={area.key} regionInspectionCount={source?.enabled ? source.inspectionCount : 0} />
+        </div>
       </div>
     </header>
   );

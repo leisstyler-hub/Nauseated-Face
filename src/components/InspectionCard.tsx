@@ -1,13 +1,9 @@
+import {OfficialResultBadge} from "./OfficialResultBadge";
+import Link from "next/link";
+import { inspectionPath } from "../../backend/inspection-detail.mjs";
 import { InspectionEvent } from "@/lib/kingcounty";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 
-function resultBadgeClasses(result: string | null) {
-  if (result === "Unsatisfactory")
-    return "bg-critical-soft text-critical border-critical/30";
-  if (result === "Satisfactory")
-    return "bg-nausea-soft text-nausea border-nausea/30";
-  return "bg-card border-card-border text-muted";
-}
 
 export function InspectionCard({ event }: { event: InspectionEvent }) {
   return (
@@ -15,27 +11,22 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-lg font-bold leading-snug">
-            {titleCase(event.name)}
+            {event.profileHref ? <Link href={event.profileHref} className="transition-colors hover:text-nausea underline decoration-nausea/40 underline-offset-4">{titleCase(event.name)}</Link> : titleCase(event.name)}
           </h3>
           <p className="text-sm text-muted">
             {titleCase(event.address)}, {titleCase(event.city)}
           </p>
         </div>
-        <span
-          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide ${resultBadgeClasses(
-            event.result,
-          )}`}
-        >
-          {event.result ?? "No result on file"}
-        </span>
+        <OfficialResultBadge result={event.result}/>
       </div>
 
+      <p className="font-bold text-foreground">{event.score===null?'Official inspection points not recorded':`${event.score} official inspection points`}</p>
       <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
         <span>{formatInspectionDate(event.inspectionDate)}</span>
         <span>{event.inspectionType}</span>
-        {event.score !== null && <span>Score: {event.score}</span>}
         <span>
-          {event.violationCount} violation{event.violationCount === 1 ? "" : "s"}
+          {event.violationCount} violation
+          {event.violationCount === 1 ? "" : "s"}
           {event.redViolationCount > 0 && (
             <span className="text-critical">
               {" "}
@@ -44,7 +35,9 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
           )}
         </span>
         {event.closedBusiness && (
-          <span className="font-semibold text-critical">Closed by inspector</span>
+          <span className="font-semibold text-critical">
+            Closed by inspector
+          </span>
         )}
       </div>
 
@@ -63,21 +56,19 @@ export function InspectionCard({ event }: { event: InspectionEvent }) {
           ))}
           {event.violations.length > 3 && (
             <li className="pl-4 text-xs text-muted">
-              +{event.violations.length - 3} more violation
-              {event.violations.length - 3 === 1 ? "" : "s"}
+              <Link href={inspectionPath(event)} className="text-nausea underline underline-offset-2">+{event.violations.length - 3} more violation
+              {event.violations.length - 3 === 1 ? "" : "s"}</Link>
             </li>
           )}
         </ul>
       )}
 
-      <a
-        href={event.sourceUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={inspectionPath(event)}
         className="mt-1 text-xs font-semibold text-nausea underline underline-offset-2"
       >
-        View official King County record
-      </a>
+        View full inspection
+      </Link>
     </article>
   );
 }

@@ -1,35 +1,57 @@
-export function Hero() {
+import { getHomeArea } from "@/lib/home-area";
+import Link from "next/link";
+import { Face } from "@/components/Face";
+import { SearchBox } from "@/components/SearchBox";
+import { ChooseCityButton } from "@/components/ChooseCityButton";
+export async function Hero() {
+  const area = await getHomeArea();
   return (
-    <section className="border-b border-card-border bg-gradient-to-b from-nausea-soft to-background">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-16 text-center sm:px-6 sm:py-24">
-        <span className="text-6xl sm:text-8xl" aria-hidden>
-          🤢
-        </span>
-        <h1 className="max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          Seattle&apos;s Food-Safety Watchdog,{" "}
-          <span className="text-nausea">With a Sense of Humor</span>
-        </h1>
-        <p className="max-w-2xl text-balance text-base text-muted sm:text-lg">
-          Nauseated Face turns official King County food inspection records
-          into readable rankings and stories — funny, sarcastic, dramatic,
-          and always data-backed. Never a knowing falsehood.
+    <section className="hero">
+      <div className="hero-copy">
+        <p className="eyebrow">
+          America&apos;s Irreverent Food-Safety Watchdog.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <a
-            href="#latest"
-            className="rounded-full bg-nausea px-6 py-3 text-sm font-bold text-background transition-opacity hover:opacity-90"
-          >
-            See Latest Inspections
-          </a>
-          <a
-            href="/methodology"
-            className="rounded-full border border-card-border px-6 py-3 text-sm font-bold text-foreground transition-colors hover:border-nausea"
-          >
-            How Scoring Works
-          </a>
+        <h1>
+          Someone&apos;s Gotta
+          <br />
+          Clean This{" "}
+          <span className="text-nausea">
+            Cr
+            <span
+              className="inline-face"
+              role="img"
+              aria-label="nauseated face"
+            >
+              <Face />
+            </span>
+            p Up.
+          </span>
+        </h1>
+        <p className="hero-description">
+          Nauseated Face turns official food inspection records into clear, readable rankings. We care where we eat, and we know you do too. Facts come first. Explore restaurant inspections near you.
+        </p>
+        <div className="my-2">
+          <SearchBox clearOnNavigate state={area.stateCode} city={area.city} jurisdiction={area.jurisdictionId} />
         </div>
-        <p className="pt-4 text-xs text-muted">
-          Independent publication, not affiliated with King County.
+        <div className="hero-actions">
+          {area.selected ? <a href="#worst" className="primary-button">
+            Meet this week&apos;s worst <span aria-hidden>↗</span>
+          </a> : <ChooseCityButton/>}
+          <Link href="/methodology" className="secondary-button">
+            The facts behind the face
+          </Link>
+        </div>
+        <p className="text-xs text-muted">
+          Independent. Not affiliated with any health department. Now serving{" "}
+          <Link href="/locations" className="text-nausea underline">verified locations</Link> — more cities on the way.
+        </p>
+      </div>
+      <div className="hero-mascot" aria-hidden="true">
+        <span><Face /></span>
+        <p>
+          PUBLIC RECORDS.
+          <br />
+          THE FULL PICTURE.
         </p>
       </div>
     </section>

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SOURCE_DATASET_URL } from "@/lib/kingcounty";
 
 const LEGAL_LINKS = [
   { href: "/about", label: "About" },
@@ -17,17 +16,10 @@ export function SiteFooter() {
         <p className="max-w-3xl text-sm leading-relaxed text-muted">
           Nauseated Face is an independent, satirical food-safety publication.
           It is <strong className="text-foreground">not affiliated with, endorsed by, or operated by</strong>{" "}
-          King County, King County Public Health, or any government agency.
-          All inspection facts are sourced directly from the{" "}
-          <a
-            href={SOURCE_DATASET_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-nausea underline underline-offset-2"
-          >
-            official King County Food Establishment Inspection Data
-          </a>{" "}
-          and are not independently verified beyond that source.
+          any government agency. Inspection findings come from the responsible health authority&apos;s public records,
+          identified on each report. Historical results do not establish current conditions.{" "}
+          <Link href="/coverage" className="font-medium text-nausea underline underline-offset-2">View sources and coverage</Link>.
+
         </p>
 
         <nav className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
@@ -43,8 +35,7 @@ export function SiteFooter() {
         </nav>
 
         <p className="mt-8 text-xs text-muted">
-          © 2026 Nauseated Face. Not affiliated with King County or Hugging
-          Face.
+          © 2026 Nauseated Face. Not affiliated with any government agency or Hugging Face.
         </p>
       </div>
     </footer>

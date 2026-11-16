@@ -1,8 +1,21 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
+import { headers } from "next/headers";
+import { TrafficTracker } from "@/components/TrafficTracker";
+
+async function WebsiteShell({ children }: { children: React.ReactNode }) {
+  if ((await headers()).get("x-nf-maintenance") === "1") return children;
+  return <>
+    <TrafficTracker />
+    <Suspense fallback={<header className="h-16 border-b border-card-border" />}><SiteHeader /></Suspense>
+    <main className="flex flex-1 flex-col"><Suspense fallback={<p className="p-8 text-muted">Loading official records...</p>}>{children}</Suspense></main>
+    <SiteFooter />
+  </>;
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +28,9 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://nauseated-face.app";
-const TITLE = "Nauseated Face — Seattle Food-Safety Watchdog";
+const TITLE = "Nauseated Face — America’s Irreverent Food-Safety Watchdog";
 const DESCRIPTION =
-  "Official King County food inspection data, turned into readable rankings and stories. Funny, sarcastic, dramatic, and always data-backed.";
+  "Official restaurant inspection records, turned into readable rankings and stories. Explore inspections near you. Funny, sarcastic, dramatic, and always data-backed.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -47,9 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <SiteHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
-        <SiteFooter />
+        <Suspense fallback={null}><WebsiteShell>{children}</WebsiteShell></Suspense>
       </body>
     </html>
   );
