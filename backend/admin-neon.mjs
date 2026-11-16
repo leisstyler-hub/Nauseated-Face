@@ -77,7 +77,7 @@ export async function accessRequest(request, session, invite) {
   try {
     const raw = await request.text(); if (raw.length > 2048) return reply(400, { error: 'Invalid request' });
     const body = JSON.parse(raw);
-    if (typeof body.email !== 'string' || typeof body.name !== 'string' || Object.keys(body).length !== 2) return reply(400, { error: 'Name and email required' });
+    if (typeof body.email !== 'string' || typeof body.name !== 'string' || body.admin !== true || Object.keys(body).length !== 3) return reply(400, { error: 'Enter name and email, and check Admin to grant administrator access.' });
     const email = body.email.trim().toLowerCase(), name = body.name.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !name || name.length > 100) return reply(400, { error: 'Enter a valid name and email' });
     const result = await invite({ actor: session.user.id, name, email });

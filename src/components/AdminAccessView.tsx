@@ -8,7 +8,7 @@ export function AdminAccessView({accounts}:{accounts:AdminAccount[]}){
   <p className="my-5 max-w-2xl text-sm leading-7 text-muted">Manage administrator access and invitations. A founder title alone does not grant account access.</p>
   <section aria-label="Founders" className="mb-8 rounded-xl border border-nausea/30 bg-nausea-soft p-5 sm:p-6">
    <h2 className="text-xs font-bold uppercase tracking-widest text-nausea">Founders</h2>
-   <ul className="mt-4 grid gap-4 sm:grid-cols-2">{['Tyler','Micah Mowrey'].map(name=><li key={name} className="flex min-w-0 flex-wrap items-center gap-3"><h3 className="break-words font-bold">{name}</h3><span className="rounded-full border border-nausea/30 px-3 py-1 text-xs font-bold text-nausea">Founder</span></li>)}</ul>
+   <ul className="mt-4 grid gap-4 sm:grid-cols-2">{['Tyler Leiss','Micah Mowrey'].map(name=><li key={name} className="flex min-w-0 flex-wrap items-center gap-3"><h3 className="break-words font-bold">{name}</h3><span className="rounded-full border border-nausea/30 px-3 py-1 text-xs font-bold text-nausea">Founder</span></li>)}</ul>
   </section>
   <section aria-label="People and access">
    <h2 className="mb-4 text-xl font-bold">People and access</h2>

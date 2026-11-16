@@ -26,6 +26,19 @@ test('provider rejection is never reported as an email sent', async () => {
   await assert.rejects(sendAccessEmail({ email: 'test@example.test', name: 'Test', origin: 'https://example.test', baseURL: 'https://provider.test/auth', fetcher }), /email/);
 });
 
+test('administrator invitations require an explicit Admin check', async () => {
+  let calls = 0;
+  const invite = async () => { calls++; return { status: 200, body: { sent: true } }; };
+  for (const admin of [undefined, false, 'true']) {
+    const request = new Request('https://example.test/api/admin/invitations', { method: 'POST', headers: { origin: 'https://example.test', 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Invited', email: 'invited@example.test', admin }) });
+    assert.equal((await accessRequest(request, { user: { id: 'owner', role: 'owner' } }, invite)).status, 400);
+  }
+  assert.equal(calls, 0);
+  const request = new Request('https://example.test/api/admin/invitations', { method: 'POST', headers: { origin: 'https://example.test', 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Invited', email: 'invited@example.test', admin: true }) });
+  assert.equal((await accessRequest(request, { user: { id: 'owner', role: 'owner' } }, invite)).status, 200);
+  assert.equal(calls, 1);
+});
+
 test('real grants require verified identity, pin it, expire unused invitations and respect revocation', async () => {
   const db = new PGlite();
   try {
