@@ -21,8 +21,19 @@ export function createAdminAuth({ database = undefined, secret = '', baseURL = '
 
 export async function ownerSession(auth, headers) {
   if (!auth) return null;
+  if (process.env.NEON_AUTH_BASE_URL && /neon-auth/.test(headers.get('cookie') ?? '')) {
+    const { neonAdmin } = await import('../src/lib/neon-admin.ts');
+    const { authorizedNeonSession } = await import('./admin-neon.mjs');
+    const result = await neonAdmin()?.getSession();
+    const approved = await authorizedNeonSession(auth.options.database, result?.data);
+    if (approved) return approved;
+  }
   if (!(headers.get('cookie') ?? '').split(';').some(cookie => /^\s*(?:__Secure-)?nf-admin\.session_token=/.test(cookie))) return null;
   const session = await auth.api.getSession({ headers });
+  if (session?.user && process.env.NEON_AUTH_BASE_URL) {
+    const migrated = await auth.options.database.query('SELECT email FROM admin_access_grants WHERE email=$1 AND accepted_at IS NOT NULL', [session.user.email.toLowerCase()]);
+    if (migrated.rows.length) return null;
+  }
   return session?.user?.role === 'owner' ? session : null;
 }
 
@@ -43,6 +54,13 @@ export function getAdminAuth(env = process.env) {
 export async function adminRequest(request, env = process.env) {
   const auth = getAdminAuth(env);
   if (!auth) return Response.json({ error: 'Administrator sign-in is not configured' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  if (env.NEON_AUTH_BASE_URL && request.method === 'POST' && new URL(request.url).pathname === '/api/auth/sign-in/email') {
+    const body = await request.clone().json().catch(() => null);
+    if (typeof body?.email === 'string') {
+      const migrated = await auth.options.database.query('SELECT email FROM admin_access_grants WHERE email=$1 AND accepted_at IS NOT NULL', [body.email.trim().toLowerCase()]);
+      if (migrated.rows.length) return Response.json({ error: 'Use your invited account credentials' }, { status: 401, headers: { 'Cache-Control': 'no-store' } });
+    }
+  }
   const config = migrationConfig(env);
   return handleAdminRequest(request, auth, config ? credentials => migrateAdmin({ database: migrationDatabase, config, credentials }) : null);
 }

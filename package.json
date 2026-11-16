@@ -15,6 +15,7 @@
     "api:local": "node backend/server.mjs"
   },
   "dependencies": {
+    "@neon/auth": "^0.8.2",
     "better-auth": "^1.7.25",
     "next": "16.4.6",
     "pg": "8.23.1",
