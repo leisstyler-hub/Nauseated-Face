@@ -17,7 +17,7 @@ ALTER TABLE traffic_events ADD COLUMN IF NOT EXISTS device text NOT NULL DEFAULT
 ALTER TABLE traffic_events ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'unknown';
 ALTER TABLE traffic_meta ADD COLUMN IF NOT EXISTS insights_started timestamptz NOT NULL DEFAULT now();`;
 export const ACTIONS=new Set(['pageview','city_select','search_submit','search_results','search_empty','search_result_click','restaurant_click','category_click','chart_click','full_report_click','official_source_click']);
-const DIMENSION=/^[a-z0-9-]+(?:\/[a-z0-9-]+){1,2}$/;
+const DIMENSION=/^[A-Za-z0-9-]+(?:\/[A-Za-z0-9-]+){1,2}$/;
 export function validDimensions(body){
  const keys=['eventId','category','action','area','content','device','source'];
  return Object.keys(body).every(k=>keys.includes(k))

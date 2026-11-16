@@ -133,3 +133,10 @@ test('30-day retention remains measurable when the activity range is today',asyn
   assert.deepEqual(r.retention[2],{days:30,eligible:1,returned:1});
  }finally{await db.close();}
 });
+
+test('collector preserves native uppercase inspection identifiers without query strings',async()=>{
+ const key='synthetic-traffic-key-of-at-least-32-characters';const body={eventId:event(601),category:'inspection',action:'full_report_click',content:'/inspections/PFE-PR-3129577/PFE-DAQ8KWWRJ'};
+ let stored;
+ const response=await trafficRequest(new Request('https://site.test/api/traffic',{method:'POST',headers:{origin:'https://site.test','content-type':'application/json'},body:JSON.stringify(body)}),key,async event=>{stored=event;});
+ assert.equal(response.status,204);assert.equal(stored.content,body.content);
+});

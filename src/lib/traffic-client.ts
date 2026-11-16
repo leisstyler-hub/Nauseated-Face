@@ -3,7 +3,7 @@ let queue=Promise.resolve();
 export function trafficAllowed(){
  try{return !location.pathname.startsWith('/admin')&&!location.pathname.startsWith('/api')&&location.pathname!=='/maintenance'&&!navigator.webdriver&&navigator.doNotTrack!=='1'&&!(navigator as Navigator&{globalPrivacyControl?:boolean}).globalPrivacyControl&&localStorage.getItem('nf-analytics-opt-out')!=='true';}catch{return false;}
 }
-function contentKey(path:string){return /^\/(restaurants|rankings|inspections)\/[a-z0-9-]+(?:\/[a-z0-9-]+)?$/.test(path)&&path.length<=180?path:'unknown';}
+function contentKey(path:string){return /^\/(restaurants|rankings|inspections)\/[A-Za-z0-9-]+(?:\/[A-Za-z0-9-]+)?$/.test(path)&&path.length<=180?path:'unknown';}
 function source(){
  const medium=new URLSearchParams(location.search).get('utm_medium')?.toLowerCase();
  if(medium&&['email','social','paid','cpc'].includes(medium))return medium==='cpc'?'paid':medium;
