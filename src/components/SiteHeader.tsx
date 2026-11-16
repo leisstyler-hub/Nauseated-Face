@@ -3,6 +3,7 @@ import { Face } from "@/components/Face";
 import Link from "next/link";
 import { LocationSelector, type SelectorState } from "@/components/LocationSelector";
 import { STATUS_LABEL, getStates, getSourceCoverage } from "@/lib/locations";
+import {guestsEnabled} from '@/lib/guests';
 
 const NAV_LINKS = [
   { href: "/search", label: "Search" },
@@ -51,6 +52,7 @@ export async function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          {guestsEnabled()&&<Link href="/account" className="inline-flex min-h-11 items-center rounded-full border border-card-border bg-card px-3 text-xs font-bold sm:text-sm">Account</Link>}
           <Link
             href="/search"
             aria-label="Search restaurants"

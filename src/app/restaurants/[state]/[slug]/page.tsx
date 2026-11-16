@@ -8,6 +8,8 @@ import { EstablishmentCard } from "@/components/EstablishmentCard";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 import { inspectionPath } from "../../../../../backend/inspection-detail.mjs";
 import { citySlug as slugify } from "../../../../../backend/jurisdictions.mjs";
+import {BusinessGuests} from '@/components/BusinessGuests';
+import {guestsEnabled} from '@/lib/guests';
 
 export async function generateMetadata({ params }: { params: Promise<{ state: string; slug: string }> }): Promise<Metadata> {
   const { state: stateSlug, slug } = await params;
@@ -151,6 +153,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
         record? <Link href="/corrections" className="text-nausea underline">Request a correction</Link>.
       </p>
 
+      {guestsEnabled()&&<BusinessGuests jurisdictionId={profile.jurisdictionId} officialId={profile.officialId}/>}
       {related.length > 0 && (
         <section className="mt-12">
           <h2 className="text-xl font-bold">More from {titleCase(profile.city!)}</h2>

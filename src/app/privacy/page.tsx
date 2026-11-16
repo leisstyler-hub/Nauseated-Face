@@ -43,6 +43,9 @@ export default function PrivacyPage() {
         customer information.
       </p>
 
+      <h2>Guest accounts and reviews</h2>
+      <p>Where guest accounts are enabled, Google provides your sign-in identity and verified email. Saved restaurants, watched lists and preferences are private. Your chosen display name and approved review are public. New and edited reviews require administrator approval. Review and moderation history is retained to operate the approval and reporting process.</p>
+      <p>Watchdog email is optional. You can change delivery preferences in your account. A saved email preference does not mean delivery is active; your account shows whether the sender is configured. Guest opinions are separate from official inspection records. Contact us for account-data requests.</p>
       <h2>Future changes</h2>
       <p>
         If we add analytics, a newsletter, or advertising, those systems will

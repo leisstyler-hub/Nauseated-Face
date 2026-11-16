@@ -31,5 +31,5 @@ export async function websiteRequest(request, session, apply) {
 
 export function bypassMaintenance(path) {
   return ['/admin', '/api/admin', '/api/auth', '/_next'].some(prefix => path === prefix || path.startsWith(prefix + '/'))
-    || ['/api/refresh', '/maintenance', '/nauseated-face.png', '/favicon.ico', '/icon.png', '/apple-icon.png'].includes(path);
+    || ['/api/refresh', '/api/guest/unsubscribe', '/maintenance', '/nauseated-face.png', '/favicon.ico', '/icon.png', '/apple-icon.png'].includes(path);
 }

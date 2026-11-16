@@ -1,4 +1,5 @@
 export const adminSections=[
+ {href:'/admin/reviews',label:'Guest Reviews',description:'Approve guest reviews and resolve reports.'},
  {href:'/admin/controls',label:'Admin Controls',description:'Website availability, city switches and source refresh.'},
  {href:'/admin/access',label:'Admin Access',description:'Review administrator accounts and access roles.'},
  {href:'/admin/traffic',label:'Traffic',description:'Daily visitors, visits and returning visitor percentage.'},
