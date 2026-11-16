@@ -28,8 +28,10 @@ export function AdminLogin() {
     <button disabled={busy} className="min-h-12 rounded-lg bg-nausea px-5 py-3 font-bold text-background transition-colors hover:bg-nausea/90 disabled:cursor-wait disabled:opacity-50">{busy ? "Signing in…" : "Sign in"}</button>
     <Link href="/admin/forgot-password" className="text-sm font-bold text-nausea">Forgot password?</Link>
     {verifyEmail && <button type="button" className="min-h-12 text-sm font-bold text-nausea" onClick={async () => {
+      try {
       const response = await fetch('/api/auth/neon/send-verification-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: verifyEmail, callbackURL: `${location.origin}/admin/login` }) });
       setError(response.ok ? 'Verification email requested. Check your inbox and spam folder.' : 'Unable to send verification email. Please retry later.');
+      } catch { setError('Unable to send verification email. Please retry later.'); }
     }}>Resend email verification</button>}
   </form>;
 }

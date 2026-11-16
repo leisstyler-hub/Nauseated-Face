@@ -24,7 +24,8 @@ export async function ownerSession(auth, headers) {
   if (process.env.NEON_AUTH_BASE_URL && /neon-auth/.test(headers.get('cookie') ?? '')) {
     const { neonAdmin } = await import('../src/lib/neon-admin.ts');
     const { authorizedNeonSession } = await import('./admin-neon.mjs');
-    const result = await neonAdmin()?.getSession();
+    // Bypass the signed cookie snapshot so provider revocations are checked on every private read.
+    const result = await neonAdmin()?.getSession({ query: { disableCookieCache: 'true' } });
     const approved = await authorizedNeonSession(auth.options.database, result?.data);
     if (approved) return approved;
   }
