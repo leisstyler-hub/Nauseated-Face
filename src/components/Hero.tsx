@@ -8,23 +8,11 @@ export async function Hero() {
   return (
     <section className="hero">
       <div className="hero-copy">
-        <p className="eyebrow">
-          The food-safety watchdog no one asked for.
-        </p>
         <h1>
-          Someone&apos;s Gotta
+          The food-safety watchdog
           <br />
-          Clean This{" "}
           <span className="text-nausea">
-            Cr
-            <span
-              className="inline-face"
-              role="img"
-              aria-label="nauseated face"
-            >
-              <Face />
-            </span>
-            p Up.
+            no one asked for.
           </span>
         </h1>
         <p className="hero-description">

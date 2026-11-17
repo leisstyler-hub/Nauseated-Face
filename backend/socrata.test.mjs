@@ -28,5 +28,23 @@ test('bounded Socrata snapshot orders and paginates inspections, retains revisio
   assert.equal(saved.rows.length, 1);
   assert.equal(saved.rows[0].inspection_id, '12');
   assert.ok(requests.some(u => u.searchParams.get('$order') === 'inspection_date DESC,inspection_id DESC'));
-  await assert.rejects(source.snapshot({ type: 'all' }), /bounded/);
+  await assert.rejects(source.snapshot({ type: 'latest', limit: 101 }), /bounded/);
+});
+
+test('full Socrata import checks count and stable revision across every page', async () => {
+  const records = [native, { ...native, inspection_id: '13' }, { ...native, inspection_id: '14' }];
+  let truncate = false;
+  const fetcher = async url => {
+    const u = new URL(url);
+    if (u.pathname.includes('/api/views/')) return Response.json({ rowsUpdatedAt: 2 });
+    if (u.searchParams.get('$select') === 'count(*) AS count') return Response.json([{ count: '3' }]);
+    const offset = Number(u.searchParams.get('$offset'));
+    return Response.json(truncate ? [] : records.slice(offset, offset + Number(u.searchParams.get('$limit'))));
+  };
+  const source = new SocrataInspectionSource(adapter.config, { fetcher, pageSize: 2 });
+  const snapshot = await source.snapshot({ type: 'all' });
+  assert.deepEqual(snapshot.rows, records);
+  assert.equal(snapshot.revision, '2');
+  truncate = true;
+  await assert.rejects(source.snapshot({ type: 'all' }), /Incomplete/);
 });

@@ -4,6 +4,7 @@ import { Source } from './source.mjs';
 import { importPostgres } from './postgres-store.mjs';
 import { prepareSnapshot } from './postgres-pilot.mjs';
 import { openSiteStore, productionEnabled } from './production.mjs';
+export { activateValidatedFeeds, verifyProductionServing } from './feed-activation.mjs';
 
 // Deployment-only preparation: keep the old public site compatible while
 // additive tables/indexes and the King County materialization are prepared.

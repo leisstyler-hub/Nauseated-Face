@@ -13,7 +13,6 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-card-border bg-card">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <p className="mb-3 text-sm font-bold text-foreground">The food-safety watchdog no one asked for. Real inspections. Real disgusting.</p>
         <p className="max-w-3xl text-sm leading-relaxed text-muted">
           Nauseated Face is an independent, satirical food-safety publication.
           It is <strong className="text-foreground">not affiliated with, endorsed by, or operated by</strong>{" "}

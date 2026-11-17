@@ -11,15 +11,15 @@ export default function TermsPage() {
         Nauseated Face is provided for general informational and editorial
         purposes. You may read, share, and link to our content. You may not
         scrape, republish, or redistribute our presentation and commentary at
-        scale without permission — the underlying government inspection data
-        itself remains public and is freely available directly from King
-        County.
+        scale without permission. Underlying government inspection records
+        remain available from their official publishers under the applicable
+        source terms linked on our sources and coverage page.
       </p>
 
       <h2>No warranty</h2>
       <p>
         Content is provided &quot;as is.&quot; We make reasonable efforts to
-        accurately reflect the official King County inspection data, but we
+        accurately reflect the responsible health authorities&apos; inspection data, but we
         do not guarantee completeness, accuracy, or timeliness, and we are
         not liable for decisions made based on this site. A record on this
         site is a record of an inspection, not a current determination of

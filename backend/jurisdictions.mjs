@@ -6,6 +6,21 @@
 // 'unavailable' (no permitted machine-readable source verified yet).
 export const JURISDICTIONS = [
   {
+    id:'tx-austin',stateCode:'TX',stateName:'Texas',name:'Austin Public Health',
+    healthAuthority:'Austin Public Health',sourceUrl:'https://data.austintexas.gov/Health-and-Community-Services/Restaurant-Inspection-Scores/ecmv-9xxi',
+    scoring:{type:'score_100',direction:'higher_is_better'},coverageStatus:'coming_soon',enabled:false,refreshFrequency:'daily',cities:['Austin','West Lake Hills','Sunset Valley','Rollingwood','Pflugerville','Bee Cave','Lakeway','Manor'],
+  },
+  {
+    id:'oh-cincinnati',stateCode:'OH',stateName:'Ohio',name:'Cincinnati',
+    healthAuthority:'Cincinnati Health Department',sourceUrl:'https://data.cincinnati-oh.gov/Healthy-and-Safe/Food-Inspections/rg6p-b3h3',
+    scoring:{type:'result_only',direction:'none'},coverageStatus:'coming_soon',enabled:false,refreshFrequency:'daily',cities:['Cincinnati'],
+  },
+  {
+    id:'ny-nyc',stateCode:'NY',stateName:'New York',name:'New York City',
+    healthAuthority:'New York City Department of Health and Mental Hygiene',sourceUrl:'https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j',
+    scoring:{type:'letter_grade_score',direction:'lower_is_better'},coverageStatus:'coming_soon',enabled:false,refreshFrequency:'daily',cities:['New York City'],
+  },
+  {
     id: 'md-montgomery', stateCode: 'MD', stateName: 'Maryland', name: 'Montgomery County',
     healthAuthority: 'Montgomery County Department of Health and Human Services',
     sourceUrl: 'https://data.montgomerycountymd.gov/Health-and-Human-Services/HHS-Food-Inspection-Data-from-July-2024-and-onward/dkrp-gr48',
