@@ -9,7 +9,7 @@ export async function Hero() {
     <section className="hero">
       <div className="hero-copy">
         <p className="eyebrow">
-          America&apos;s Irreverent Food-Safety Watchdog.
+          The food-safety watchdog no one asked for.
         </p>
         <h1>
           Someone&apos;s Gotta
@@ -28,7 +28,7 @@ export async function Hero() {
           </span>
         </h1>
         <p className="hero-description">
-          Nauseated Face turns official food inspection records into clear, readable rankings. We care where we eat, and we know you do too. Facts come first. Explore restaurant inspections near you.
+          Real inspections. Real disgusting. Explore official food inspection records from the cities we cover, with each health department&apos;s findings, dates, and scoring kept in context.
         </p>
         <div className="my-2">
           <SearchBox clearOnNavigate state={area.stateCode} city={area.city} jurisdiction={area.jurisdictionId} />
