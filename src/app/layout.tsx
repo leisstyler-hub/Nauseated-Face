@@ -39,17 +39,20 @@ export const metadata: Metadata = {
     template: "%s | Nauseated Face",
   },
   description: DESCRIPTION,
+  icons: { icon: '/nauseated-face-artwork.png', apple: '/nauseated-face-artwork.png' },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
     siteName: "Nauseated Face",
     type: "website",
+    images: [{ url:'/nauseated-face-artwork.png',width:1024,height:1024,alt:'Nauseated Face' }],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: ['/nauseated-face-artwork.png'],
   },
 };
 

@@ -25,7 +25,7 @@ export function DataNetwork(){
   const canvas=canvasRef.current,stage=stageRef.current;if(!canvas||!stage)return;
   const ctx=canvas.getContext('2d');if(!ctx)return;
   let width=1,height=1,frame=0,last=0,phase=phaseRef.current,visible=true,disposed=false;
-  const face=new Image();face.src='/nauseated-face.png';
+  const face=new Image();face.src='/_next/image?url=%2Fnauseated-face-artwork.png&w=256&q=75';
   function paint(){
    if(!ctx||!canvas)return;
    const angle=.45+phase*.12,cy=Math.cos(angle),sy=Math.sin(angle),cx=Math.cos(-.18),sx=Math.sin(-.18),radius=Math.min(width*.41,height*.45);

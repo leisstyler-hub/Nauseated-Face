@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Face } from './Face';
 
 import {trackTraffic} from '@/lib/traffic-client';
 
@@ -16,7 +17,7 @@ interface Suggestion {
   matchScope?: string;
 }
 
-export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", clearOnNavigate = false, state = "", city = "", jurisdiction = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; clearOnNavigate?: boolean; state?: string; city?: string; jurisdiction?: string }) {
+export function SearchBox({ placeholder = "Search restaurants, cities, or addresses…", autoFocus = false, initialQuery = "", clearOnNavigate = false, state = "", city = "", jurisdiction = "" }: { placeholder?: string; autoFocus?: boolean; initialQuery?: string; clearOnNavigate?: boolean; state?: string; city?: string; jurisdiction?: string }) {
   const [query, setQuery] = useState(initialQuery);
   const [interacted, setInteracted] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -104,6 +105,7 @@ export function SearchBox({ placeholder = "🤢 Search restaurants, cities, or a
           Search restaurants, cities, or addresses
         </label>
         <div className="flex items-center gap-2 rounded-full border border-card-border bg-card px-4 py-2.5 transition-colors focus-within:border-nausea">
+          <span className="shrink-0 text-xl" aria-hidden="true"><Face /></span>
           <input
             id={`${listId}-input`}
             type="search"

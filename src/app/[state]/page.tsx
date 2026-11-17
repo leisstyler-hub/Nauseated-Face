@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { STATUS_LABEL, findState, getCoveredCities } from "@/lib/locations";
 import { SearchBox } from "@/components/SearchBox";
+import { Face } from '@/components/Face';
 
 
 export async function generateMetadata({ params }: { params: Promise<{ state: string }> }): Promise<Metadata> {
@@ -34,7 +35,7 @@ export default async function StatePage({ params }: { params: Promise<{ state: s
         <span className="text-muted">{state.name}</span>
       </nav>
       <p className="text-xs font-bold tracking-widest text-nausea">EXPLORE RESTAURANT INSPECTIONS NEAR YOU.</p>
-      <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">{state.name} 🤢</h1>
+      <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">{state.name} <Face /></h1>
       <p className="my-5 max-w-2xl text-sm leading-relaxed text-muted">
         Pick a city to explore its saved inspection records. We only mark a city available after its official data is
         imported and verified — no pretend coverage.
