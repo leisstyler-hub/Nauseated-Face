@@ -163,7 +163,7 @@ test('scheduled collector isolates failures, retains prior data and respects sou
     const result = await syncEnabledSources(store, id => {
       called.push(id);
       if (id === 'wa-king') return { snapshot() { throw Error('offline'); } };
-      return { snapshot: async scope => ({ rows: [row('1', 'B', 'I', { name: 'Chicago Test', city: 'Chicago' })], scope, revision: 'test', urls: [] }) };
+      return { snapshot: async scope => ({ rows: [row('1', 'B', 'I', { name: 'Chicago Test', city: 'Chicago',inspection_date:scope.start })], scope, revision: 'test', urls: [] }) };
     });
     assert.deepEqual(new Set(called), new Set(['wa-king', 'il-chicago']));
     assert.deepEqual(result.failures.map(f => f.jurisdictionId), ['wa-king']);

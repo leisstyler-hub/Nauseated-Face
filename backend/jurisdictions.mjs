@@ -5,6 +5,8 @@
 // 'coming_soon' (verified official source exists, adapter not shipped),
 // 'unavailable' (no permitted machine-readable source verified yet).
 export const JURISDICTIONS = [
+  {id:'de-state',stateCode:'DE',stateName:'Delaware',name:'Delaware (statewide)',healthAuthority:'Delaware Division of Public Health, Office of Food Protection',sourceUrl:'https://data.delaware.gov/Health/Food-Establishment-Inspection-Violations/384s-wygj',scoring:{type:'result_only',direction:'none'},coverageStatus:'coming_soon',enabled:false,refreshFrequency:'weekly',cities:['Dover','Wilmington','Newark','Seaford']},
+  {id:'ca-marin',stateCode:'CA',stateName:'California',name:'Marin County',healthAuthority:'Marin County Environmental Health Services',sourceUrl:'https://data.marincounty.gov/Public-Health/Food-Facility-Inspections/73zb-z5me',scoring:{type:'result_only',direction:'none'},coverageStatus:'coming_soon',enabled:false,refreshFrequency:'daily',cities:['San Rafael','Novato','Mill Valley','Corte Madera']},
   {
     id:'tx-austin',stateCode:'TX',stateName:'Texas',name:'Austin Public Health',
     healthAuthority:'Austin Public Health',sourceUrl:'https://data.austintexas.gov/Health-and-Community-Services/Restaurant-Inspection-Scores/ecmv-9xxi',
@@ -53,9 +55,9 @@ export const JURISDICTIONS = [
   {
     id: 'ca-san-francisco', stateCode: 'CA', stateName: 'California', name: 'San Francisco',
     healthAuthority: 'San Francisco Department of Public Health',
-    sourceUrl: 'https://data.sf.gov/',
+    sourceUrl: 'https://data.sfgov.org/Health-and-Social-Services/Health-Inspection-Scores-2024-Present-/tvy3-wexg',
     scoring: { type: 'result_only', direction: 'none' },
-    coverageStatus: 'coming_soon', enabled: false, refreshFrequency: null,
+    coverageStatus: 'coming_soon', enabled: false, refreshFrequency: 'monthly',
     cities: ['San Francisco'],
   },
   {

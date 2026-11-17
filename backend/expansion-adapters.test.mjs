@@ -40,4 +40,6 @@ test('Austin source preserves higher-is-better score and municipality stated in 
  assert.equal(adapter.normalize({...native,address:'12 Example Dr Austin, TX 78753-6507'}).city,'Austin');
  assert.throws(()=>adapter.normalize({...native,address:'12 Example Road'}),/municipality/);
  assert.throws(()=>adapter.normalize({...native,score:'101'}),/score/);
+ const unscored=adapter.normalize({...native,score:undefined,address:'12 Example Rd Cedar Park, TX 78613'});
+ assert.equal(unscored.city,'Cedar Park');assert.equal(unscored.inspection_score,'');assert.equal(adapter.inspectionSummary(unscored).score,null);
 });

@@ -70,7 +70,7 @@ interface JurisdictionDef {
 const registry = JURISDICTIONS as JurisdictionDef[];
 
 const getLocationData = cache(async () => withStore(store => Promise.all([store.coveredCities(),store.catalog()]),[[],[]]));
-export interface SourceCoverage {id:string;name:string;healthAuthority:string;sourceUrl:string;stateName:string;enabled:boolean;coverageStatus:CoverageStatus;inspectionCount:number;establishmentCount:number;firstInspectionDate:string|null;lastInspectionDate:string|null;lastSuccess:string|null;fullImportVerified:boolean;lastAttemptStatus:string|null}
+export interface SourceCoverage {id:string;name:string;healthAuthority:string;sourceUrl:string;stateName:string;enabled:boolean;coverageStatus:CoverageStatus;inspectionCount:number;establishmentCount:number;firstInspectionDate:string|null;lastInspectionDate:string|null;lastSuccess:string|null;fullImportVerified:boolean;fullBackfillProcessed:boolean;rejectedRowCount:number;lastScheduledSuccess:string|null;lastAttemptStatus:string|null}
 export const getSourceCoverage = cache(async ():Promise<SourceCoverage[]> => {await connection();const [,catalog]=await getLocationData();return catalog;});
 
 // The geographic catalog is registry-driven: states and cities come from the

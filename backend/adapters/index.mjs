@@ -4,11 +4,14 @@ import { adapter as montgomery } from './md-montgomery.mjs';
 import { adapter as cincinnati } from './oh-cincinnati.mjs';
 import { adapter as nyc } from './ny-nyc.mjs';
 import { adapter as austin } from './tx-austin.mjs';
+import {adapter as delaware} from './de-state.mjs';
+import {adapter as sanFrancisco} from './ca-san-francisco.mjs';
+import {adapter as marin} from './ca-marin.mjs';
 
 // One adapter per jurisdiction with automated collection. A jurisdiction may
 // exist in the catalog (jurisdictions.mjs) without an adapter — it then shows
 // as coming_soon/unavailable and is never imported or displayed as covered.
-export const ADAPTERS = Object.fromEntries([waKing,chicago,montgomery,cincinnati,nyc,austin].map(adapter=>[adapter.jurisdictionId,adapter]));
+export const ADAPTERS = Object.fromEntries([waKing,chicago,montgomery,cincinnati,nyc,austin,delaware,sanFrancisco,marin].map(adapter=>[adapter.jurisdictionId,adapter]));
 
 export const adapterFor = jurisdictionId => {
   const adapter = ADAPTERS[jurisdictionId];
