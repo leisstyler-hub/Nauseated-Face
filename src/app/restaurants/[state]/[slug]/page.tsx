@@ -1,4 +1,5 @@
 import {OfficialResultBadge} from "@/components/OfficialResultBadge";
+import {SourceNotice} from '@/components/SourceNotice';
 import {InspectionHistoryChart} from "@/components/InspectionHistoryChart";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,6 +9,8 @@ import { EstablishmentCard } from "@/components/EstablishmentCard";
 import { formatInspectionDate, titleCase } from "@/lib/format";
 import { inspectionPath } from "../../../../../backend/inspection-detail.mjs";
 import { citySlug as slugify } from "../../../../../backend/jurisdictions.mjs";
+import {BusinessGuests} from '@/components/BusinessGuests';
+import {guestsEnabled} from '@/lib/guests';
 
 export async function generateMetadata({ params }: { params: Promise<{ state: string; slug: string }> }): Promise<Metadata> {
   const { state: stateSlug, slug } = await params;
@@ -108,6 +111,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
           <dd>{latest?.observedAt ? `Observed ${formatInspectionDate(latest.observedAt)}${latest.stale ? " (refresh pending)" : ""}` : "Pending first refresh"}</dd>
         </div>
       </dl>
+      <SourceNotice jurisdictionId={profile.jurisdictionId}/>
       <p className="mb-8 max-w-2xl text-sm text-muted">
         These are historical official findings, not a statement of current conditions — kitchens change, people improve,
         and reinspections exist for a reason. Every record links to its original source.
@@ -127,7 +131,8 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
               <OfficialResultBadge result={inspection.fields.inspection_result}/>
-              {inspection.fields.inspection_score !== undefined && <span className="text-muted">Official score as published: {inspection.fields.inspection_score}</span>}
+              {inspection.fields.inspection_score && <span className="text-muted">Official score as published: {inspection.fields.inspection_score}</span>}
+              {inspection.fields.inspection_grade && <span className="text-muted">Official grade: {inspection.fields.inspection_grade}</span>}
             </div>
             {inspection.violations.length > 0 ? <div className="mt-4"><h3 className="text-sm font-bold">Official wording: what inspectors found</h3><ul className="mt-2 space-y-3 text-sm text-muted">{inspection.violations.map((v, index) => <li key={index} className="whitespace-pre-wrap break-words">{v.type && <span className="font-semibold">{v.type}: </span>}{v.description}{v.points !== null && <span> ({v.points} points)</span>}</li>)}</ul></div> : <p className="mt-3 text-xs text-muted">No violation wording supplied in this saved record. This is not a current safety rating.</p>}
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs">
@@ -151,6 +156,7 @@ export default async function RestaurantPage({ params }: { params: Promise<{ sta
         record? <Link href="/corrections" className="text-nausea underline">Request a correction</Link>.
       </p>
 
+      {guestsEnabled()&&<BusinessGuests jurisdictionId={profile.jurisdictionId} officialId={profile.officialId}/>}
       {related.length > 0 && (
         <section className="mt-12">
           <h2 className="text-xl font-bold">More from {titleCase(profile.city!)}</h2>

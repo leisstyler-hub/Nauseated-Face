@@ -26,8 +26,8 @@ export function refreshAuthorized(request, env = process.env) {
   return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
 
-export async function runProductionRefresh(store, source) {
-  if (!source) return syncEnabledSources(store);
+export async function runProductionRefresh(store, source, options) {
+  if (!source) return syncEnabledSources(store,undefined,options);
   await store.migrate();
   return importPostgres(store, source, { type: 'latest', limit: 100 });
 }

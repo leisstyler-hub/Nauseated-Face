@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Face } from '@/components/Face';
 import { notFound } from "next/navigation";
 import { STATUS_LABEL, findCity, findState, getCityEstablishments } from "@/lib/locations";
 import { EstablishmentCard } from "@/components/EstablishmentCard";
@@ -56,7 +57,7 @@ export default async function CityPage({ params }: { params: Promise<{ state: st
       </nav>
       <p className="text-xs font-bold tracking-widest text-nausea">PUBLIC RECORDS. THE FULL PICTURE.</p>
       <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">
-        {city.name}, {state.code} 🤢
+        {city.name}, {state.code} <Face />
       </h1>
       <p className="my-5 max-w-2xl text-sm leading-relaxed text-muted">
         Inspection authority: {city.healthAuthority}. Coverage status: {STATUS_LABEL[city.status]}.
@@ -66,7 +67,7 @@ export default async function CityPage({ params }: { params: Promise<{ state: st
       </p>
       {city.covered && <p className="text-sm leading-7 text-muted">{city.inspectionCount.toLocaleString('en-US')} saved inspections across {city.establishmentCount.toLocaleString('en-US')} businesses{city.firstInspectionDate && city.lastInspectionDate ? `, ${formatInspectionDate(city.firstInspectionDate)} to ${formatInspectionDate(city.lastInspectionDate)}` : ''}. <Link href="/coverage" className="text-nausea underline">Source coverage and refresh details</Link>.</p>}
       <div className="my-8">
-        <SearchBox state={state.code} city={city.name} placeholder={`🤢 Search ${city.name} restaurants…`} />
+        <SearchBox state={state.code} city={city.name} placeholder={`Search ${city.name} restaurants…`} />
       </div>
 
       {!city.covered && (
@@ -97,7 +98,7 @@ export default async function CityPage({ params }: { params: Promise<{ state: st
           {worst.length > 0 && (
             <section className="mb-10">
               <h2 className="text-xl font-bold">
-                Highest violation points in the saved sample — {city.name} <span aria-hidden>🤢</span>
+                Highest violation points in the saved sample — {city.name} <Face />
               </h2>
               <p className="mt-1 text-xs text-muted">
                 Ranked by each establishment’s most recent saved inspection score under the {city.jurisdictionName}{" "}

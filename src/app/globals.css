@@ -619,6 +619,8 @@ button {
   height: 1em;
   vertical-align: -0.15em;
   object-fit: contain;
+  clip-path: circle(38% at 50% 50%);
+  transform: scale(1.35);
 }
 
 /* History-backed Inspection Desk: reflow evidence, never squeeze desktop rows. */

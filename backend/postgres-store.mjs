@@ -57,8 +57,9 @@ export class PostgresStore {
       await client.query(readFileSync(new URL('./001_postgres.sql', import.meta.url), 'utf8'));
       await client.query(readFileSync(new URL('./002_national.sql', import.meta.url), 'utf8'));
       await client.query(readFileSync(new URL('./003_source_operations.sql', import.meta.url), 'utf8'));
+      await client.query(readFileSync(new URL('./004_backfill.sql', import.meta.url), 'utf8'));
       const [version] = await query(client, 'SELECT max(version) AS version FROM nf_preview.schema_migrations');
-      if (version.version !== 3) throw new Error('Unsupported preview schema version');
+      if (version.version !== 4) throw new Error('Unsupported preview schema version');
       await seedJurisdictions((sql, params) => client.query(sql, params));
     });
   }
@@ -115,9 +116,13 @@ export class PostgresStore {
       (SELECT count(*) FROM nf_preview.establishments e WHERE e.jurisdiction_id=j.id) AS establishment_count,
       (SELECT finished_at FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id AND r.status='success' ORDER BY r.id DESC LIMIT 1) AS last_success,
       (SELECT status FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id ORDER BY r.id DESC LIMIT 1) AS last_attempt_status,
-      (SELECT scope->>'type'='all' FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id AND r.status='success' ORDER BY r.id DESC LIMIT 1) AS full_import_verified
+      coalesce((SELECT rejected_count=0 FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id AND r.status='success' AND scope->>'type'='all' ORDER BY r.id DESC LIMIT 1),false)
+        AND NOT EXISTS(SELECT 1 FROM nf_preview.quarantined_rows q WHERE q.jurisdiction_id=j.id AND q.active) AS full_import_verified,
+      (SELECT count(*)::int FROM nf_preview.quarantined_rows q WHERE q.jurisdiction_id=j.id AND q.active) AS rejected_row_count,
+      EXISTS(SELECT 1 FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id AND r.status='success' AND scope->>'type'='all') AS full_backfill_processed,
+      (SELECT finished_at FROM nf_preview.refresh_runs r WHERE r.jurisdiction_id=j.id AND r.status='success' AND trigger_kind='vercel-cron' ORDER BY r.id DESC LIMIT 1) AS last_scheduled_success
       FROM nf_preview.jurisdictions j LEFT JOIN stats s ON s.jurisdiction_id=j.id ORDER BY j.state_name,j.name`);
-    return rows.map(r => ({ id:r.id,stateCode:r.state_code,stateName:r.state_name,name:r.name,healthAuthority:r.health_authority,sourceUrl:r.source_url,scoring:JSON.parse(r.scoring_json),coverageStatus:r.full_import_verified&&['available','limited'].includes(r.coverage_status)?'available':r.coverage_status,enabled:r.enabled,refreshFrequency:r.refresh_frequency,establishmentCount:Number(r.establishment_count),inspectionCount:Number(r.inspection_count),firstInspectionDate:r.first_inspection_date,lastInspectionDate:r.last_inspection_date,lastSuccess:r.last_success,fullImportVerified:!!r.full_import_verified,lastAttemptStatus:r.last_attempt_status??null }));
+    return rows.map(r => ({ id:r.id,stateCode:r.state_code,stateName:r.state_name,name:r.name,healthAuthority:r.health_authority,sourceUrl:r.source_url,scoring:JSON.parse(r.scoring_json),coverageStatus:r.full_import_verified&&['available','limited'].includes(r.coverage_status)?'available':r.coverage_status,enabled:r.enabled,refreshFrequency:r.refresh_frequency,establishmentCount:Number(r.establishment_count),inspectionCount:Number(r.inspection_count),firstInspectionDate:r.first_inspection_date,lastInspectionDate:r.last_inspection_date,lastSuccess:r.last_success,fullImportVerified:!!r.full_import_verified,rejectedRowCount:Number(r.rejected_row_count),fullBackfillProcessed:!!r.full_backfill_processed,lastScheduledSuccess:r.last_scheduled_success??null,lastAttemptStatus:r.last_attempt_status??null }));
   }
 
   // Owner-controlled publication switch. Disabling a jurisdiction removes it from every public
@@ -246,11 +251,25 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
     if (JSON.stringify(snapshot.scope) !== JSON.stringify(scope)) throw new Error('Source scope does not match requested scope');
     return await withTransaction({ connect: async () => ({ query: client.query.bind(client), release(error) { discard = error; } }) }, async tx => {
       const [run] = await query(tx, "INSERT INTO nf_preview.refresh_runs(started_at,status,scope,jurisdiction_id) VALUES($1,'running',$2,$3) RETURNING id", [started, JSON.stringify(scope), jurisdictionId]);
-      const all = await query(tx, 'SELECT * FROM nf_preview.source_rows WHERE jurisdiction_id=$1', [jurisdictionId]);
+      const bounded = ['latest','window'].includes(scope.type);
+      const requestedSources=[...snapshot.rows.map(r=>r.sourceId),...snapshot.protectedSourceIds];
+      const all = bounded
+        ? await query(tx,`SELECT * FROM nf_preview.source_rows WHERE jurisdiction_id=$1 AND (event_id=ANY($2::text[]) OR source_id=ANY($3::text[])${scope.type==='window'?' OR event_id IN (SELECT id FROM nf_preview.inspections WHERE jurisdiction_id=$1 AND inspection_date >= $4 AND inspection_date < $5)':''})`,scope.type==='window'?[jurisdictionId,[...snapshot.events.keys()],requestedSources,scope.start,scope.end]:[jurisdictionId,[...snapshot.events.keys()],requestedSources])
+        : await query(tx, 'SELECT * FROM nf_preview.source_rows WHERE jurisdiction_id=$1', [jurisdictionId]);
       const oldRows = new Map(all.map(r => [r.source_id, r]));
+      const protectedEvents = new Set(all.filter(r => snapshot.protectedSourceIds.has(r.source_id)).map(r => r.event_id));
       const seen = new Set(snapshot.rows.map(r => r.sourceId));
       // Imports only ever add/remove rows inside their own jurisdiction.
-      const inScope = old => old.jurisdiction_id === jurisdictionId && (scope.type === 'all' || (scope.type === 'business' && JSON.parse(old.raw_json).business_id === scope.businessId) || snapshot.events.has(old.event_id));
+      const inScope = old => old.jurisdiction_id === jurisdictionId && !protectedEvents.has(old.event_id) && (scope.type === 'all' || (scope.type === 'business' && JSON.parse(old.raw_json).business_id === scope.businessId) || (scope.type==='window'&&JSON.parse(old.raw_json).inspection_date>=scope.start&&JSON.parse(old.raw_json).inspection_date<scope.end) || snapshot.events.has(old.event_id));
+      if (scope.type === 'all') {
+        await tx.query('UPDATE nf_preview.quarantined_rows SET active=false WHERE jurisdiction_id=$1',[jurisdictionId]);
+        await insertBatch(tx,'quarantined_rows',['jurisdiction_id','source_revision','official_row_id','imported_source_id','raw_json','reason','active','first_run'],snapshot.quarantine.map(r=>[jurisdictionId,snapshot.revision,String(r.raw[':id']??r.sourceId),r.sourceId,JSON.stringify(r.raw),r.reason,true,run.id]),'ON CONFLICT(jurisdiction_id,source_revision,official_row_id) DO UPDATE SET active=true');
+      }
+      if(scope.type==='window'){
+        await tx.query(`UPDATE nf_preview.quarantined_rows SET active=false WHERE jurisdiction_id=$1 AND active AND
+          (imported_source_id=ANY($2::text[]) OR ((raw_json::jsonb)->>$3 >= $4 AND (raw_json::jsonb)->>$3 < $5))`,[jurisdictionId,[...snapshot.rows.map(r=>r.sourceId.slice(jurisdictionId.length+1)),...snapshot.quarantine.map(r=>r.sourceId)],ADAPTERS[jurisdictionId].config.dateField,scope.start,scope.end]);
+        await insertBatch(tx,'quarantined_rows',['jurisdiction_id','source_revision','official_row_id','imported_source_id','raw_json','reason','active','first_run'],snapshot.quarantine.map(r=>[jurisdictionId,snapshot.revision,String(r.raw[':id']??r.sourceId),r.sourceId,JSON.stringify(r.raw),r.reason,true,run.id]),'ON CONFLICT(jurisdiction_id,source_revision,official_row_id) DO UPDATE SET active=true');
+      }
       let changed = 0;
       const changes = [], removed = [];
       for (const old of all) {
@@ -272,12 +291,14 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
       await insertBatch(tx,'row_changes',['run_id','source_id','action','old_hash','new_hash'],changes);
       await insertBatch(tx,'row_revisions',['source_id','hash','event_id','raw_json','first_run'],snapshot.rows.map(r=>[r.sourceId,r.hash,r.id,r.raw,run.id]),'ON CONFLICT DO NOTHING');
       await insertBatch(tx,'source_rows',['source_id','event_id','hash','raw_json','active','last_run','jurisdiction_id'],snapshot.rows.map(r=>[r.sourceId,r.id,r.hash,r.raw,true,run.id,jurisdictionId]),'ON CONFLICT(source_id) DO UPDATE SET event_id=excluded.event_id,hash=excluded.hash,raw_json=excluded.raw_json,active=true,last_run=excluded.last_run,jurisdiction_id=excluded.jurisdiction_id');
-      const existingSlugs = new Map((await query(tx, 'SELECT id,slug FROM nf_preview.establishments WHERE jurisdiction_id=$1', [jurisdictionId])).map(e => [e.id, e.slug]));
-      await tx.query('DELETE FROM nf_preview.violations WHERE source_id IN (SELECT source_id FROM nf_preview.source_rows WHERE jurisdiction_id=$1)', [jurisdictionId]);
-      await tx.query('DELETE FROM nf_preview.inspections WHERE jurisdiction_id=$1', [jurisdictionId]);
-      await tx.query('DELETE FROM nf_preview.establishments WHERE jurisdiction_id=$1', [jurisdictionId]);
+      const affectedBusinesses=bounded?[...new Set([...all.map(r=>JSON.parse(r.raw_json).business_id),...snapshot.rows.map(r=>JSON.parse(r.raw).business_id)])]:[];
+      const affectedEvents=bounded?[...new Set([...snapshot.events.keys(),...all.map(r=>r.event_id),...(await query(tx,'SELECT id FROM nf_preview.inspections WHERE jurisdiction_id=$1 AND business_id=ANY($2::text[])',[jurisdictionId,affectedBusinesses])).map(r=>r.id)])]:[];
+      const existingSlugs = new Map((await query(tx, `SELECT id,slug FROM nf_preview.establishments WHERE jurisdiction_id=$1${bounded?' AND official_id=ANY($2::text[])':''}`, bounded?[jurisdictionId,affectedBusinesses]:[jurisdictionId])).map(e => [e.id, e.slug]));
+      await tx.query(`DELETE FROM nf_preview.violations WHERE source_id IN (SELECT source_id FROM nf_preview.source_rows WHERE jurisdiction_id=$1${bounded?' AND event_id=ANY($2::text[])':''})`, bounded?[jurisdictionId,affectedEvents]:[jurisdictionId]);
+      await tx.query(`DELETE FROM nf_preview.inspections WHERE jurisdiction_id=$1${bounded?' AND business_id=ANY($2::text[])':''}`, bounded?[jurisdictionId,affectedBusinesses]:[jurisdictionId]);
+      await tx.query(`DELETE FROM nf_preview.establishments WHERE jurisdiction_id=$1${bounded?' AND official_id=ANY($2::text[])':''}`, bounded?[jurisdictionId,affectedBusinesses]:[jurisdictionId]);
       const grouped = new Map(), violations = [];
-      for (const r of await query(tx, 'SELECT * FROM nf_preview.source_rows WHERE active AND jurisdiction_id=$1 ORDER BY source_id', [jurisdictionId])) {
+      for (const r of await query(tx, `SELECT * FROM nf_preview.source_rows WHERE active AND jurisdiction_id=$1${bounded?' AND event_id=ANY($2::text[])':''} ORDER BY source_id`, bounded?[jurisdictionId,affectedEvents]:[jurisdictionId])) {
         const raw = JSON.parse(r.raw_json);
         const g = grouped.get(r.event_id) ?? { row: raw, count: 0, run: Number(r.last_run), jurisdiction: r.jurisdiction_id };
         if (fields(g.row) !== fields(raw)) throw new Error('Conflicting inspection fields in retained snapshot');
@@ -305,8 +326,11 @@ export async function importPostgres(store, source, scope = { type: 'latest', li
       await insertBatch(tx,'inspections',['id','business_id','serial','inspection_date','fields_json','row_count','last_run','jurisdiction_id','establishment_id'],[...grouped].map(([id,g])=>[id,g.row.business_id,g.row.inspection_serial_num,g.row.inspection_date,fields(g.row),g.count,g.run,g.jurisdiction,establishmentId(g.jurisdiction,ADAPTERS[g.jurisdiction].establishment(g.row).officialId)]));
       await insertBatch(tx,'establishments',['id','jurisdiction_id','official_id','name','address','city','state_code','zip','latitude','longitude','slug','latest_inspection_date','latest_result','latest_score','inspection_count','last_run','search_text'],[...establishments.values()].map(e=>[e.id,e.jurisdiction,e.officialId,e.name,e.address,e.city,e.stateCode,e.zip,e.latitude,e.longitude,existingSlugs.get(e.id) ?? `${citySlug(e.name).slice(0,100)||'establishment'}-${e.id}`,e.latest.date,e.latest.result,e.latest.score,e.count,e.run,[jurisdictionById(e.jurisdiction)?.stateName,jurisdictionById(e.jurisdiction)?.healthAuthority,...searchNames.get(e.id)].filter(Boolean).join(' ')]));
       await tx.query('UPDATE nf_preview.jurisdictions SET last_synced_at=$1 WHERE id=$2', [now(), jurisdictionId]);
-      await tx.query("UPDATE nf_preview.refresh_runs SET finished_at=$1,status='success',source_revision=$2,row_count=$3,changed_count=$4,request_urls=$5 WHERE id=$6", [now(), snapshot.revision, snapshot.rows.length, changed, JSON.stringify(snapshot.urls), run.id]);
-      return { runId: Number(run.id), rowCount: snapshot.rows.length, changedCount: changed, scope, revision: snapshot.revision };
+      await tx.query("UPDATE nf_preview.refresh_runs SET finished_at=$1,status='success',source_revision=$2,row_count=$3,changed_count=$4,request_urls=$5,rejected_count=$7,source_row_count=$8 WHERE id=$6", [now(), snapshot.revision, snapshot.rows.length, changed, JSON.stringify(snapshot.urls), run.id, snapshot.quarantine.length, snapshot.sourceRowCount]);
+      if(scope.type==='window')await tx.query(`INSERT INTO nf_preview.backfill_windows(jurisdiction_id,source_revision,window_start,window_end,source_row_count,accepted_count,rejected_count,run_id,policy_id)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(jurisdiction_id,source_revision,window_start,window_end) DO UPDATE
+        SET source_row_count=excluded.source_row_count,accepted_count=excluded.accepted_count,rejected_count=excluded.rejected_count,run_id=excluded.run_id,policy_id=excluded.policy_id`,[jurisdictionId,snapshot.revision,scope.start,scope.end,snapshot.sourceRowCount,snapshot.rows.length,snapshot.quarantine.length,run.id,scope.policyId??'legacy']);
+      return { runId: Number(run.id), rowCount: snapshot.rows.length, changedCount: changed, scope, revision: snapshot.revision, rejectedCount:snapshot.quarantine.length, sourceRowCount:snapshot.sourceRowCount };
     });
   } catch (error) {
     if (locked) await client.query("INSERT INTO nf_preview.refresh_runs(started_at,finished_at,status,scope,error,jurisdiction_id) VALUES($1,$2,'error',$3,$4,$5)", [started, now(), JSON.stringify(scope), 'Import failed; last committed snapshot retained', jurisdictionId]);

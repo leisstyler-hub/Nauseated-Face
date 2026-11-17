@@ -1,3 +1,14 @@
 {
-  "crons": [{ "path": "/api/refresh", "schedule": "15 12 * * *" }]
+  "crons": [
+    {"path":"/api/refresh?jurisdiction=wa-king","schedule":"15 12 * * *"},
+    {"path":"/api/refresh?jurisdiction=il-chicago","schedule":"25 12 * * *"},
+    {"path":"/api/refresh?jurisdiction=md-montgomery","schedule":"35 12 * * *"},
+    {"path":"/api/refresh?jurisdiction=oh-cincinnati","schedule":"45 12 * * *"},
+    {"path":"/api/refresh?jurisdiction=ny-nyc","schedule":"55 12 * * *"},
+    {"path":"/api/refresh?jurisdiction=tx-austin","schedule":"5 13 * * *"},
+    {"path":"/api/refresh?jurisdiction=ca-san-francisco","schedule":"15 13 * * *"},
+    {"path":"/api/refresh?jurisdiction=ca-marin","schedule":"25 13 * * *"},
+    {"path":"/api/refresh?jurisdiction=de-state","schedule":"35 13 * * *"},
+    {"path":"/api/guest/watchdog","schedule":"45 12 * * *"}
+  ]
 }

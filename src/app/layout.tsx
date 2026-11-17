@@ -28,9 +28,9 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://nauseated-face.app";
-const TITLE = "Nauseated Face — America’s Irreverent Food-Safety Watchdog";
+const TITLE = "Nauseated Face — The Food-Safety Watchdog No One Asked For";
 const DESCRIPTION =
-  "Official restaurant inspection records, turned into readable rankings and stories. Explore inspections near you. Funny, sarcastic, dramatic, and always data-backed.";
+  "Real inspections. Real disgusting. Explore official food inspection records from the cities we cover. The food-safety watchdog no one asked for.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -39,17 +39,20 @@ export const metadata: Metadata = {
     template: "%s | Nauseated Face",
   },
   description: DESCRIPTION,
+  icons: { icon: '/nauseated-face-artwork.png', apple: '/nauseated-face-artwork.png' },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
     url: SITE_URL,
     siteName: "Nauseated Face",
     type: "website",
+    images: [{ url:'/nauseated-face-artwork.png',width:1024,height:1024,alt:'Nauseated Face' }],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: ['/nauseated-face-artwork.png'],
   },
 };
 
