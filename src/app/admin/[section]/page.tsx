@@ -3,7 +3,6 @@ import { notFound,redirect } from 'next/navigation';
 import { getAdminAuth,ownerSession } from '../../../../backend/admin-auth.mjs';
 import { openSiteStore } from '../../../../backend/production.mjs';
 import { AdminDataSection } from '@/components/AdminDataSection';
-import type { Operations } from '@/lib/admin';
 import { AdminAccessView,type AdminAccount } from '@/components/AdminAccessView';
 export default async function AdminSectionPage({params}:{params:Promise<{section:string}>}){
  const auth=getAdminAuth();const session=await ownerSession(auth,await headers());if(!session)redirect('/admin/login');
@@ -20,6 +19,13 @@ export default async function AdminSectionPage({params}:{params:Promise<{section
   }
   return <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6"><AdminAccessView accounts={result.rows as AdminAccount[]}/></section>;
  }
- const store=openSiteStore();let data:Operations;try{data=await store.operations();}finally{await store.close();}
- return <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6"><AdminDataSection section={section} data={data}/></section>;
+ const store=openSiteStore();
+ try{
+  const content=section==='sources'
+   ? <AdminDataSection section="sources" data={{sources:await store.sourceOperations()}}/>
+   : section==='imports'
+    ? <AdminDataSection section="imports" data={{runs:await store.recentRuns()}}/>
+    : <AdminDataSection section="storage" data={{storage:await store.storageUsage()}}/>;
+  return <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">{content}</section>;
+ }finally{await store.close();}
 }
