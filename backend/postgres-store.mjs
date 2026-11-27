@@ -64,16 +64,27 @@ export class PostgresStore {
     });
   }
   async recentRuns() { return query(this.pool, 'SELECT * FROM nf_preview.refresh_runs ORDER BY id DESC LIMIT 20'); }
-  async operations() {
-    const [sources, runs, [counts], [storage]] = await Promise.all([
-      this.catalog(), this.recentRuns(),
-      query(this.pool, 'SELECT (SELECT count(*)::int FROM nf_preview.establishments) AS establishments, (SELECT count(*)::int FROM nf_preview.inspections) AS inspections, (SELECT count(*)::int FROM nf_preview.source_rows) AS source_rows, (SELECT count(*)::int FROM nf_preview.row_revisions) AS revisions'),
-      query(this.pool, "SELECT pg_database_size(current_database())::text AS database_bytes, coalesce(sum(pg_total_relation_size(c.oid)),0)::text AS schema_bytes FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='nf_preview' AND c.relkind='r'"),
+  async inspectionCounts() {
+    const [counts] = await query(this.pool, 'SELECT (SELECT count(*)::int FROM nf_preview.establishments) AS establishments, (SELECT count(*)::int FROM nf_preview.inspections) AS inspections, (SELECT count(*)::int FROM nf_preview.source_rows) AS source_rows, (SELECT count(*)::int FROM nf_preview.row_revisions) AS revisions');
+    return counts;
+  }
+  async storageUsage() {
+    const [storage] = await query(this.pool, "SELECT pg_database_size(current_database())::text AS database_bytes, coalesce(sum(pg_total_relation_size(c.oid)),0)::text AS schema_bytes FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='nf_preview' AND c.relkind='r'");
+    return { databaseBytes: storage.database_bytes, schemaBytes: storage.schema_bytes, note: 'Shared physical database; provider compute and billing are not connected.' };
+  }
+  async sourceOperations() {
+    const [sources, attempts, states] = await Promise.all([
+      this.catalog(),
+      query(this.pool, 'SELECT DISTINCT ON(jurisdiction_id) * FROM nf_preview.refresh_runs ORDER BY jurisdiction_id,id DESC'),
+      query(this.pool, "SELECT DISTINCT ON(jurisdiction_id) jurisdiction_id,finished_at FROM nf_preview.refresh_runs WHERE status='success' ORDER BY jurisdiction_id,id DESC"),
     ]);
-    const attempts = await query(this.pool, 'SELECT DISTINCT ON(jurisdiction_id) * FROM nf_preview.refresh_runs ORDER BY jurisdiction_id,id DESC');
-    const states = await query(this.pool, "SELECT DISTINCT ON(jurisdiction_id) jurisdiction_id,finished_at FROM nf_preview.refresh_runs WHERE status='success' ORDER BY jurisdiction_id,id DESC");
-    return { counts, storage: { databaseBytes: storage.database_bytes, schemaBytes: storage.schema_bytes, note: 'Shared physical database; provider compute and billing are not connected.' },
-      sources: sources.map(source => ({ ...source, lastAttempt: attempts.find(run => run.jurisdiction_id === source.id) ?? null, lastSuccess: states.find(s => s.jurisdiction_id === source.id)?.finished_at ?? null })),
+    return sources.map(source => ({ ...source, lastAttempt: attempts.find(run => run.jurisdiction_id === source.id) ?? null, lastSuccess: states.find(s => s.jurisdiction_id === source.id)?.finished_at ?? null }));
+  }
+  async operations() {
+    const [sources, runs, counts, storage] = await Promise.all([
+      this.sourceOperations(), this.recentRuns(), this.inspectionCounts(), this.storageUsage(),
+    ]);
+    return { counts, storage, sources,
       runs, integrations: { advertising: 'not_connected', analytics: 'not_connected', searchConsole: 'not_connected' } };
   }
   async status() {

@@ -9,7 +9,7 @@ export default async function AdminPage() {
   const session = await ownerSession(getAdminAuth(), await headers());
   if (!session) redirect("/admin/login");
   const store = openSiteStore();
-  let data: Operations;
-  try { data = await store.operations(); } finally { await store.close(); }
+  let data: Pick<Operations, 'counts'>;
+  try { data = { counts: await store.inspectionCounts() }; } finally { await store.close(); }
   return <AdminOverview data={data} email={session.user.email} />;
 }

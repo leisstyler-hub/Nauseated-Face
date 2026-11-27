@@ -11,8 +11,8 @@ export default async function ControlsPage() {
   const session = await ownerSession(auth, await headers());
   if (!session) redirect("/admin/login");
   const store = openSiteStore();
-  let data: Operations;
-  try { data = await store.operations(); } finally { await store.close(); }
+  let data: Pick<Operations, 'sources'>;
+  try { data = { sources: await store.sourceOperations() }; } finally { await store.close(); }
   const enabled = await websiteEnabled(auth.options.database);
   return <AdminControlsView data={data} websiteEnabled={enabled} />;
 }
