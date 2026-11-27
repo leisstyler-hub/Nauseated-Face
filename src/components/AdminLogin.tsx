@@ -15,7 +15,7 @@ export function AdminLogin() {
       const options = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: String(form.get('email')).trim().toLowerCase(), password: form.get('password'), rememberMe: false }) };
       let response = await fetch('/api/auth/sign-in/email', options);
       if (response.status === 401) response = await fetch('/api/auth/neon/sign-in/email', options);
-      if (response.status === 403) { setVerifyEmail(String(form.get('email')).trim().toLowerCase()); setError('Verify your email using the Neon email before signing in.'); return; }
+      if (response.status === 403) { setVerifyEmail(String(form.get('email')).trim().toLowerCase()); setError('Enter the code from your email using Complete admin setup below, then sign in.'); return; }
       if (!response.ok) { setError(response.status === 503 ? "Administrator access has not been configured yet." : response.status === 429 ? "Too many attempts. Please wait a minute." : "Unable to sign in. Check your credentials."); return; }
       const permitted = await fetch('/api/admin/session', { cache: 'no-store' });
       if (!permitted.ok) { setVerifyEmail(String(form.get('email')).trim().toLowerCase()); setError('This account needs email verification and an active administrator invitation. Ask an owner to check your invitation.'); return; }
@@ -26,12 +26,8 @@ export function AdminLogin() {
     <AdminPasswordField />
     {error && <p role="alert" aria-live="polite" className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm text-warning">{error}</p>}
     <button disabled={busy} className="min-h-12 rounded-lg bg-nausea px-5 py-3 font-bold text-background transition-colors hover:bg-nausea/90 disabled:cursor-wait disabled:opacity-50">{busy ? "Signing in…" : "Sign in"}</button>
+    <Link href="/admin/verify-email" className="text-sm font-bold text-nausea">Have a verification code? Complete admin setup</Link>
     <Link href="/admin/forgot-password" className="text-sm font-bold text-nausea">Forgot password?</Link>
-    {verifyEmail && <button type="button" className="min-h-12 text-sm font-bold text-nausea" onClick={async () => {
-      try {
-      const response = await fetch('/api/auth/neon/send-verification-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: verifyEmail, callbackURL: `${location.origin}/admin/login` }) });
-      setError(response.ok ? 'Verification email requested. Check your inbox and spam folder.' : 'Unable to send verification email. Please retry later.');
-      } catch { setError('Unable to send verification email. Please retry later.'); }
-    }}>Resend email verification</button>}
+    {verifyEmail && <Link href="/admin/verify-email" className="min-h-12 text-sm font-bold text-nausea">Enter or resend email verification code</Link>}
   </form>;
 }
