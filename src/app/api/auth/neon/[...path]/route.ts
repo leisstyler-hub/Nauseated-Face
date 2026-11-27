@@ -3,7 +3,7 @@ import { getAdminAuth } from '../../../../../../backend/admin-auth.mjs';
 import { recoverAdministrator } from '../../../../../../backend/admin-neon.mjs';
 import {googleReady} from '@/lib/guests';
 
-const allowed = new Set(['sign-in/email', 'sign-out', 'get-session', 'request-password-reset', 'reset-password', 'send-verification-email', 'verify-email']);
+const allowed = new Set(['sign-in/email', 'sign-out', 'get-session', 'request-password-reset', 'reset-password', 'send-verification-email', 'verify-email', 'email-otp/verify-email', 'email-otp/send-verification-otp']);
 async function handle(request: Request, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;
   if(path.join('/')==='sign-in/social'){
@@ -31,6 +31,18 @@ async function handle(request: Request, context: { params: Promise<{ path: strin
       const result = await recoverAdministrator({ database: local.options.database, email: body.email.trim().toLowerCase(), ip: request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-forwarded-for') ?? 'unknown', origin: new URL(request.url).origin, baseURL: process.env.NEON_AUTH_BASE_URL });
       return Response.json(result.body, { status: result.status, headers: { 'Cache-Control': 'no-store' } });
     } catch { return Response.json({ error: 'Recovery temporarily unavailable' }, { status: 503 }); }
+  }
+  if (path.join('/').startsWith('email-otp/')) {
+    if (request.method !== 'POST') return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    try {
+      const raw = await request.clone().text();
+      if (raw.length > 2048) throw Error('Invalid request');
+      const body = JSON.parse(raw);
+      if (typeof body.email !== 'string' || body.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) throw Error('Invalid email');
+      const sending = path.join('/') === 'email-otp/send-verification-otp';
+      if (Object.keys(body).some(key => !['email', sending ? 'type' : 'otp'].includes(key))) throw Error('Invalid fields');
+      if (sending ? body.type !== 'email-verification' : typeof body.otp !== 'string' || !/^\d{6}$/.test(body.otp)) throw Error('Invalid code');
+    } catch { return Response.json({ error: 'Enter a valid email and six-digit verification code.' }, { status: 400 }); }
   }
   const handler = auth.handler();
   return request.method === 'GET' ? handler.GET(request, context) : handler.POST(request, context);

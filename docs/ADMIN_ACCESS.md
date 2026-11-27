@@ -22,3 +22,9 @@ Invitations are audited in `admin_control_runs`. Failed delivery requests roll b
 ## Verification boundaries
 
 Use isolated fixtures for privilege checks, invitation expiration, provider-ID binding, revocation, provider failures and recovery throttling. Browser tests may intercept email responses to avoid sending test mail; label those separately from real delivery and signed-in production evidence. Never create synthetic production owners to pass a smoke test.
+
+## Verification codes (2026-11-27)
+
+Admin login and password setup link to `/admin/verify-email`. Invited users enter their email and six-digit Neon verification code there, or request a fresh email-verification code. Link-based emails remain supported. Verification does not grant administrator access: the existing active invitation, verified session and pinned provider identity checks still apply.
+
+Provider contract: https://github.com/neondatabase/website/blob/main/content/docs/auth/guides/plugins/email-otp.md and installed `@neon/auth/dist/adapter-core.d.ts`. Only email-verification OTP send/verify routes are proxied; OTP sign-in and other code types remain unavailable. Browser QA uses intercepted provider responses; real inbox delivery and recipient acceptance require a real-user check.

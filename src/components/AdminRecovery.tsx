@@ -25,6 +25,6 @@ export function AdminRecovery({ token, invalid = false }: { token?: string; inva
       {error && <p role="alert" className="text-sm text-warning">{error}</p>}{sent && <p role="status" className="text-sm text-nausea">If that account exists, check its inbox and spam folder for a reset link.</p>}
       <button disabled={busy} className="min-h-12 rounded-lg bg-nausea px-5 py-3 font-bold text-background disabled:opacity-50">{busy ? 'Please wait…' : reset ? 'Save password and return to login' : 'Send reset link'}</button>
     </form>}
-    <div className="mt-6 flex flex-wrap gap-5 text-sm font-bold text-nausea"><Link href="/admin/login">Back to sign in</Link>{reset && <Link href="/admin/forgot-password">Request a new link</Link>}</div>
+    <div className="mt-6 flex flex-wrap gap-5 text-sm font-bold text-nausea"><Link href="/admin/login">Back to sign in</Link><Link href="/admin/verify-email">Enter email verification code</Link>{reset && <Link href="/admin/forgot-password">Request a new link</Link>}</div>
   </section>;
 }
